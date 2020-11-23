@@ -1,0 +1,64 @@
+{
+  "name": "piano-lesson",
+  "version": "1.0.0",
+  "main": "webpack.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client": "webpack serve --env API_URL=http://localhost:3000 --content-base src --mode development --inline",
+    "build": "webpack --mode production&&npm run package",
+    "package": "xcopy /Y dist\\index.* mulesoft\\src\\main\\resources&&xcopy /Y dist\\login.* mulesoft\\src\\main\\resources\\login"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ssakoda/piano-lesson.git"
+  },
+  "author": "Seitaro Sakoda",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-react": "^7.12.1",
+    "babel-loader": "^8.1.0",
+    "concurrently": "^5.3.0",
+    "css-loader": "^5.0.0",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^4.5.0",
+    "nodemon": "^2.0.6",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-tabs": "^3.1.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.3.0",
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.0"
+  },
+  "bugs": {
+    "url": "https://github.com/ssakoda/piano-lesson/issues"
+  },
+  "homepage": "https://github.com/ssakoda/piano-lesson#readme",
+  "dependencies": {
+    "aws-sdk": "^2.781.0",
+    "axios": "^0.21.0",
+    "body-parser": "^1.19.0",
+    "crypto-js": "^4.0.0",
+    "dayjs": "^1.9.6",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "nedb-promises": "^4.1.0",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
+    "react-autosuggest": "^10.0.3",
+    "react-datepicker": "^3.3.0",
+    "react-modal": "^3.11.2",
+    "react-select": "^3.1.0",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.1",
+    "uuid": "^8.3.1",
+    "ws": "^7.4.0"
+  },
+  "description": ""
+}

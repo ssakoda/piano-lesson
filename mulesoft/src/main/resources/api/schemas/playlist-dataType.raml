@@ -1,0 +1,60 @@
+#%RAML 1.0 DataType
+displayName: Playlist
+type: array
+
+items:
+  properties:
+    user_id:
+      displayName: User Id
+      type: string
+      required: false
+      description: owner's User Id
+    piece:
+      displayName: Piece
+      type: !include piece-dataType.raml
+      required: false
+    done:
+      description: true if recording is done (and there is a value in "recording")
+      displayName: Is Done
+      required: false
+      type: boolean
+    recording:
+      displayName: Recording
+      type: !include recording-dataType.raml
+      required: false
+      description: recording info for today
+    last_recording:
+      displayName: Last Recording
+      type: !include recording-dataType.raml
+      required: false
+      description: last recording info rather than today's (the newest record whose date is older than today)
+  example: |
+    {
+      "user_id":"5JEddTUBmqxIxn8G",
+      "piece": {
+        "name":"Rondo Alla Turca",
+        "composer":"Burgmüller",
+        "inlist":false,
+        "user_id":"5JEddTUBmqxIxn8G",
+        "_id":"H6eoUZXeEMeLNVAR"
+      },
+      "done": true,
+      "recording": {
+        "user_id":"5JEddTUBmqxIxn8G",
+        "piece_id":"TPjjzs1BSQOsa8G4",
+        "date":"2020-11-12",
+        "datetime": "2020-11-12T00:00:00.000",
+        "bucket":"skd-piano-lesson",
+        "key":"5JEddTUBmqxIxn8G/2020-11-12/Rondo-Alla-Turca(Burgmüller)-20201112024405.webm",
+        "_id":"0KF0iNhsQUBinG5B"
+      },
+      "last_recording": {
+        "user_id":"5JEddTUBmqxIxn8G",
+        "piece_id":"TPjjzs1BSQOsa8G4",
+        "date":"2020-11-11",
+        "datetime": "2020-11-11T00:00:00.000",
+        "bucket":"skd-piano-lesson",
+        "key":"5JEddTUBmqxIxn8G/2020-11-11/Rondo-Alla-Turca(Burgmüller)-20201111024405.webm",
+        "_id":"0KF0iNhsQUBinG5C"
+      }
+    }

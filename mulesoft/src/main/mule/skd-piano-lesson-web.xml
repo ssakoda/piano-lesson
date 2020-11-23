@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd">
+	<flow name="skd-piano-lesson-web-session-validation" doc:id="27d44c13-9533-4e3d-9243-1953dd466e01" >
+		<logger level="INFO" doc:name="Log cookie" doc:id="cd7768fc-5842-486f-8e39-e3ee98f24a95" message="#[attributes.headers.cookie]"/>
+		<ee:transform doc:name="Transform Message Session Validation" doc:id="e0d2d33b-e24f-4993-a251-5835609ec162" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="sessionId" ><![CDATA[%dw 2.0
+output application/java
+fun arrayToObject(a : Array, o : Object) = o ++ {(a[0]) : a[1]}
+var cookie = attributes.headers.cookie default ""
+var keyValues = cookie splitBy(";")
+var params = keyValues reduce (v, acc={}) -> arrayToObject((trim(v) splitBy("=")), acc)
+---
+if(params.plsessionId == null) null else params.plsessionId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log sessionId" doc:id="83b4ccdc-2691-4d08-8006-f368140605c8" message="#[vars.sessionId]"/>
+		<choice doc:name="Choice" doc:id="bf6bcc4d-be0e-4e86-993d-235b56fcc47c" >
+			<when expression="#[vars.sessionId == null]">
+				<raise-error doc:name="Raise error" doc:id="682a35a7-7d84-4329-8378-5b8d08cb380b" type="LOGIN:SESSION_EXPIRED" description="session is expired"/>
+			</when>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="e498e687-9e31-4a2b-9736-e5c15d92b568" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="user_id" ><![CDATA[%dw 2.0
+import java!com::skd::pianolesson::CryptoUtils
+output application/java
+---
+CryptoUtils::validateJWT(vars.sessionId)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="skd-piano-lesson-web-static-resource-flow" doc:id="fcfa6996-a42c-437d-a25f-67247be6f242" >
+		<http:listener doc:name="Listener /{filename}" doc:id="642b1b12-1ea0-4281-99fa-0dc3264ca48e" config-ref="HTTP_Listener_config" path="/{filename}">
+			<http:response >
+				<http:body ><![CDATA[#[%dw 2.0
+output text/plain
+---
+payload]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "text/html"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Location" : "/login/login.html?message=" ++ error.description
+}]]]></http:headers>
+			</http:error-response>
+		
+</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="4862b235-19fa-4b0f-a6f5-9b3bfd6aafb4" message="#[attributes.uriParams]"/>
+		<flow-ref doc:name="Flow Reference session validation" doc:id="3220b1b2-3bc9-4a30-95db-73faa4e0e402" name="skd-piano-lesson-web-session-validation"/>
+		<set-variable value='#[%dw 2.0
+output application/java
+---
+if(attributes.uriParams.filename == "login")
+"login.html"
+else
+attributes.uriParams.filename]' doc:name="Set Variable filename" doc:id="c048912c-b665-4fc0-bee5-bab06b9e68f1" variableName="filename" />
+		<file:read doc:name="Read" doc:id="923b416c-c2ee-41b4-a338-8a8ff0cc0b57" path="#[vars.filename]" config-ref="File_Config"/>
+	</flow>
+    <flow name="skd-piano-lesson-web-static-resource-login-flow" doc:id="ab71a080-b796-4e3b-a3c3-61a684d927ff">
+		<http:listener doc:name="Listener /login/{filename}" doc:id="073105ca-a6ff-4343-b116-c05c4bd7b933" config-ref="HTTP_Listener_config" path="/login/{filename}">
+			<http:response>
+				<http:body><![CDATA[#[%dw 2.0
+output text/plain
+---
+payload]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "text/html"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Location" : "/login/login.html?message=" ++ error.description
+}]]]></http:headers>
+			</http:error-response>
+		
+</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="9643e39b-ca9c-4643-8343-133c1c746a05" message="#[attributes.uriParams]"/>
+		<set-variable value='#[%dw 2.0
+output application/java
+---
+if(attributes.uriParams.filename == "")
+"login.html"
+else
+attributes.uriParams.filename]' doc:name="Set Variable filename" doc:id="d74cf2bc-e2c8-40a3-8bdc-e15fe6b33742" variableName="filename" />
+		<file:read doc:name="Read" doc:id="408f1685-057d-4bd1-a5f1-1d9e8005d09a" config-ref="File_Config" path='#["login/" ++ vars.filename]' />
+	
+</flow>
+	<flow name="skd-piano-lesson-web-static-resource-root-flow" doc:id="8740b780-759e-45f6-92ad-7856c2267c6f" >
+		<http:listener doc:name="Listener /" doc:id="c70ea347-044e-49d7-a501-b342f558b924" config-ref="HTTP_Listener_config" path="/" >
+			<http:response >
+				<http:body ><![CDATA[#[%dw 2.0
+output text/plain
+---
+payload]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "text/html"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Location" : "/login/login.html?message=" ++ error.description
+}]]]></http:headers>
+			</http:error-response>
+		
+</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="c177758e-0335-4d07-8a92-d322f4a6a18e" message="#[attributes]" />
+		<flow-ref doc:name="Flow Reference session validation" doc:id="acbb309f-68e6-4811-a30e-d980082255c2" name="skd-piano-lesson-web-session-validation" />
+		<set-variable value='#["index.html"]' doc:name="Set Variable filename" doc:id="33678aad-5749-47a8-bbab-7a8d159881a1" variableName="filename" />
+		<file:read doc:name="Read" doc:id="b9ed687a-9320-42d4-963d-7df07a56b64d" config-ref="File_Config" path="#[vars.filename]" />
+	
+</flow>
+	<flow name="skd-piano-lesson-web-login-post-flow" doc:id="0e22580d-7e8c-4717-8c8c-eca95167f838" >
+		<http:listener doc:name="Listener /login" doc:id="d503c85a-7509-4638-8c0c-f3bd26664cea" config-ref="HTTP_Listener_config" path="/login" >
+			<http:response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Set-Cookie" : vars.cookie,
+	"Location" : vars.redirectURL
+}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Location" : "/login/login.html?message=" ++ error.description
+}]]]></http:headers>
+			</http:error-response>
+		
+</http:listener>
+		<logger level="INFO" doc:name="Log attributes" doc:id="21649a8d-ae6b-48a1-8aa4-6a930b8922ea" message="#[attributes]" />
+		<logger level="INFO" doc:name="Log payload" doc:id="0b451822-d603-472c-93e4-e45d2658f7bf" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="318e42fd-89f6-4565-8893-f311409db154" >
+			<when expression='#[attributes.method == "POST"]'>
+				<flow-ref doc:name="Flow Reference login-flow" doc:id="5c14dfb8-00b1-477c-b429-0994e1d10a84" name="skd-piano-lesson-web-login-flow" />
+				<set-variable value="/" doc:name="Set Variable redirect to /" doc:id="6b63c893-2fbe-4203-a24f-796a0ed0b894" variableName="redirectURL"/>
+			
+</when>
+			<otherwise>
+				<set-variable value="/login/login.html" doc:name="Set Variable redirect to /login/login.html" doc:id="d02c98a5-0a27-40a5-b122-c5cb9a06c75a" variableName="redirectURL"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="skd-piano-lesson-web-login-flow" doc:id="b94ebbb8-5e61-427c-84d7-3d045a69642d" >
+		<ee:transform doc:name="Transform Message keep inputs in variables" doc:id="5d093465-a3a7-4a56-88e2-182c9f9a8b60">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="username"><![CDATA[%dw 2.0
+output application/java
+---
+payload.username]]></ee:set-variable>
+				<ee:set-variable variableName="password"><![CDATA[%dw 2.0
+output application/java
+---
+payload.password]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference get users" doc:id="afbcf942-c2ad-4faf-a35f-cd405d2b6780" name="skd-piano-lesson-db-get-users" />
+		<logger level="INFO" doc:name="Log users" doc:id="fe96c09a-b51e-4eb0-ad4a-3d432e8b9bcb" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message find login user" doc:id="0becf899-4b24-4964-986f-5b134855871e">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="loginuser" ><![CDATA[%dw 2.0
+output application/java
+var loginuser = payload filter (v, i) -> (v.username == vars.username)
+---
+if(sizeOf(loginuser) == 0) null else loginuser[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log loginuser" doc:id="a187d10b-a644-4620-b715-af67bd1834d1" message="#[vars.loginuser]"/>
+		<choice doc:name="Choice" doc:id="dc9fd331-17b9-42d3-944e-1458ae94f69f" >
+			<when expression="#[vars.loginuser == null]">
+				<raise-error doc:name="Raise error user was not found" doc:id="b315d0b0-5a43-4ec4-b214-c454e99a7f5d" type="LOGIN:USER_NOT_FOUND" description="user was not found"/>
+			</when>
+		</choice>
+		<ee:transform doc:name="Transform Message validate pwd" doc:id="ac8902d5-24b5-479f-b194-6fa232a29361" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logincheck" ><![CDATA[%dw 2.0
+output application/java
+import java!com::skd::pianolesson::CryptoUtils
+var hashedPwd = CryptoUtils::sha256(vars.password)
+---
+vars.loginuser.password == hashedPwd]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="6921ae9b-6f61-4e61-8ad9-b83eb7e1687f" >
+			<when expression="#[vars.logincheck == false]">
+				<raise-error doc:name="Raise error invalid password" doc:id="ea005a75-91e6-4b3e-9ea6-85538ed4f3ba" type="LOGIN:INVALID_PASSWORD" description="invalid password"/>
+			</when>
+		</choice>
+		<java:invoke-static doc:name="Invoke static generateJWT" doc:id="5ba26ad4-eb6e-4d0f-8904-3899a4533289" class="com.skd.pianolesson.CryptoUtils" target="jwttoken" method="generateJWT(java.lang.String)">
+			<java:args ><![CDATA[#[{subject : vars.loginuser["_id"]}]]]></java:args>
+		</java:invoke-static>
+		<set-variable value='#["plsessionId=" ++ vars.jwttoken ++ "; Path=/; Max-Age=3600; SameSite=Strict; HttpOnly"]' doc:name="Set Variable cookie " doc:id="2b65412f-cbd8-4425-a620-665707b7a828" variableName="cookie" />
+	
+</flow>
+	<flow name="skd-piano-lesson-web-logout-flow" doc:id="15e89e57-a729-42c6-8da0-66cb03bc263c" >
+		<http:listener doc:name="Listener" doc:id="d9c9adec-471c-487e-bfa4-31fe35f363d4" config-ref="HTTP_Listener_config" path="/logout">
+			<http:response statusCode="302">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Set-Cookie" : "plsessionId=; Path=/; Max-Age=0; SameSite=Strict; HttpOnly",
+	"Location" : vars.redirectURL
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="34446c79-f63c-4b89-8673-11cfd8378e71" message="#[attributes]"/>
+		<set-variable value='#["/login"]' doc:name="Set Variable redirectURL to /login " doc:id="b944c21d-1fa9-4666-941a-8385eac7ab59" variableName="redirectURL"/>
+	</flow>
+	<flow name="skd-piano-lesson-web-ws-on-inbound-connection" doc:id="736732b3-2acf-4fac-8d86-0cf4c3394f6e" >
+		<websocket:on-inbound-connection doc:name="On New Inbound Connection" doc:id="ca8bff8d-cfc2-444e-bf49-f11f2e1dd660" config-ref="WebSockets_Config" path="/data"/>
+		<flow-ref doc:name="Flow Reference session validation" doc:id="785d054f-caf8-47aa-a486-cd64240932e0" name="skd-piano-lesson-web-session-validation"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f1322731-0a9c-447e-9609-fbe94a213929" message='#[attributes.headers]'/>
+	</flow>
+	<flow name="skd-piano-lesson-web-ws-on-inbound-message" doc:id="b632c250-91ac-4464-8a8a-57e55d96fafc" >
+		<websocket:inbound-listener config-ref="WebSockets_Config" path="/data" />
+		<flow-ref doc:name="Flow Reference session validation" doc:id="285db3f9-4892-48ad-ad4b-7791784f2250" name="skd-piano-lesson-web-session-validation" />
+		<flow-ref doc:name="Flow Reference ws data flow" doc:id="75dff9ae-3b5c-4cb9-a92e-0067c9901fe4" name="skd-piano-lesson-data-handle-ws-data-flow"/>
+	</flow>
+	<flow name="skd-piano-lesson-web-ws-on-socket-closed" doc:id="bdd91970-c36d-4b60-9745-8af2a9a820f7" >
+		<websocket:on-socket-closed doc:name="On Socket Closed" doc:id="10ca9b4a-0b12-447f-9cd0-46d684759932" config-ref="WebSockets_Config" path="/"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cf87e706-b6e6-49c0-b3e8-f12d976ebdf4" message="#[payload]"/>
+	</flow>
+
+</mule>

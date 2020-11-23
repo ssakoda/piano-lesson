@@ -1,0 +1,241 @@
+#%RAML 1.0
+title: skd-piano-lesson
+
+types:
+  Error:    
+    example:
+      {message : "Unknown error"}
+    properties:
+      message:
+        type: string
+        description: error message
+  User: !include schemas/user-dataType.raml
+  Piece:  !include schemas/piece-dataType.raml
+  Recording: !include schemas/recording-dataType.raml
+  Playlist: !include schemas/playlist-dataType.raml
+
+/me:
+  description: Handle login user information
+  get:
+    displayName: Get login user information
+    responses:
+      200:
+        body:
+          application/json:
+            type: User
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+/user:
+  post:
+    displayName: Upsert a User
+    description: if matched Id is found, this upserts the given record. if not, inserts. "password" has to be given as "Non-Encrypted" string.
+    body:
+      application/json:
+        type: User
+    responses:
+      200:
+        body:
+          application/json:
+            type: User
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+  /{user_id}:
+    uriParameters:
+      user_id:
+        displayName: User Id
+        type: string
+        description: the Id of the User you query
+    get:
+      displayName: Get a User
+      description: Reterns a User if Id matched. "password" is given as "Encrypted" string.
+      responses:
+        200:
+          body:
+            application/json:
+              type: User
+        401:
+          description: Unauthorized error
+          body:
+            application/json:
+              type: Error
+
+/pieces:
+  get:
+    displayName: Get all Pieces of the user
+    queryParameters:
+      inlist:
+        description: if true, this returns all "inlist=true" pieces of the user. if false, "inlist=false"
+        type: boolean
+        default: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: Piece[]
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+/piece:
+  post:
+    displayName: Upsert a Piece
+    description: if matched Id is found, this upserts the given record. if not, inserts.
+    body:
+      application/json:
+        type: Piece
+    responses:
+      200:
+        body:
+          application/json:
+            type: Piece
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+
+/playlist:
+  get:
+    displayName: Get a playlist
+    queryParameters:
+      datestring:
+        description: target datestring (YYYY-MM-DD format
+        type: string
+        required: true
+      piece_id:
+        description: if specified, this returns a list with only the piece
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: Playlist
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+/composers:
+  get:
+    displayName: Get a list of composers the user has
+    responses:
+      200:
+        body:
+          application/json:
+            type: array
+            items:
+              properties:
+                composer:
+                  type: string
+                  description: name of the composer
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+/recording:
+  /{id}:
+    uriParameters:
+      id:
+        type: string
+        displayName: Recording Id
+        description: Id of the recording you query
+    get:
+      displayName: Get a recording and the signed url
+      responses:
+        200:
+          body:
+            application/json:
+              properties:
+                recording:
+                  displayName: the recording info
+                  type: Recording
+                signedUrl:
+                  displayName: Signed URL for AWS S3
+                  type: string
+        401:
+          description: Unauthorized error
+          body:
+            application/json:
+              type: Error
+
+/start:
+  post:
+    displayName: start recording
+    description: start recording by creating a recording record and preparing multi-part upload
+    body:
+      application/json:
+        properties:
+          piece_id:
+            displayName: Piece Id
+            description: Id of the piece for the recording
+            type: string
+            required: true
+          datestring:
+            displayName: Date String (YYYY-MM-DD)
+            description: Lesson date in YYYY-MM-DD format
+            type: string
+            required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: Recording
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+          
+
+/stop:
+  post:
+    displayName: stop recording
+    description: stop recording by completing multi-part upload
+    body:
+      application/json:
+        properties:
+          recording_id:
+            displayName: Recording Id
+            description: Id of the recording to stop
+            type: string
+            required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: object
+            properties:
+              Location:
+                description: URL of the recording file
+                type: string
+              Bucket:
+                description: bucket name to be stored 
+                type: string
+              Key:
+                description: Key of the recording file
+                type: string
+              ETag:
+                description: ETag for the upload
+                type: string
+      401:
+        description: Unauthorized error
+        body:
+          application/json:
+            type: Error
+
+

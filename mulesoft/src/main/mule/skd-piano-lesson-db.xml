@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="skd-piano-lesson-db-upsert-user" doc:id="4af1cbbe-b287-432b-b266-7d626824e315" >
+		<logger level="INFO" doc:name="Logger" doc:id="326dd755-9962-42f4-b9aa-5247d52b5233" message='#[payload]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="edac4615-cded-43b4-a6e5-2bac96824e89" message="#[payload.password]"/>
+		<choice doc:name="Choice" doc:id="569fd8a4-e9b7-49b3-80ab-209d1b4246ba" >
+			<when expression='#[payload."_id" == null]'>
+				<ee:transform doc:name="Set Id" doc:id="2441a424-c3a7-4cd1-b3aa-e655a7be5a1b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import java!com::skd::pianolesson::CryptoUtils
+output application/java
+---
+{
+	"_id": uuid(),
+	name: payload.name,
+	username: payload.username,
+	password: payload.password
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			</ee:variables>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<os:retrieve doc:name="Retrieve existing one" doc:id="e6221556-3f18-4e04-aab2-4d83e4083dd5" key='#[payload["_id"]]' objectStore="Object_store_User" target="existingUser">
+		</os:retrieve>
+				<ee:transform doc:name="Transform Message merge" doc:id="38df3fdf-ac11-4b96-9829-b0bd9d182d41" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+import java!com::skd::pianolesson::CryptoUtils
+output application/java
+---
+vars.existingUser ++ payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="60fab6c0-74f9-48eb-9dbf-6a59beb461dd" message="#[payload]"/>
+		<os:store doc:name="Upsert User" doc:id="5596d292-7aa4-497b-aab2-3d31e2445852" objectStore="Object_store_User" key='#[payload["_id"]]'>
+		</os:store>
+	</flow>
+	<flow name="skd-piano-lesson-db-get-user" doc:id="2ca4327e-077c-462d-9835-590fbed86452" >
+		<logger level="INFO" doc:name="Logger" doc:id="138ba7cb-aa62-42ef-aa57-6ab013a1d9c3" message="#[payload]"/>
+		<os:retrieve doc:name="Retrieve" doc:id="62937b13-c8dd-43b0-8d80-d96ea8d9d12e" key='#[payload["_id"]]' objectStore="Object_store_User"/>
+	
+</flow>
+	<flow name="skd-piano-lesson-db-get-users" doc:id="970a7890-c0ab-4597-8926-7a3b09f82d57" >
+		<logger level="INFO" doc:name="Logger" doc:id="23c2ada6-c50a-42ce-ad7c-e5138b4c49d7" message="#[payload]"/>
+		<os:retrieve-all doc:name="Retrieve all" doc:id="e27891b6-c61b-4f76-96dd-6996e7f12ce9" objectStore="Object_store_User"/>
+		<ee:transform doc:name="Transform Message" doc:id="68fa5fad-7230-49e1-845b-e4259eb6d2b8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+valuesOf(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+	</flow>
+	<flow name="skd-piano-lesson-db-upsert-piece" doc:id="e495f7fb-8324-4bc7-b7e9-1ab7dc0bcfb7">
+		<logger level="INFO" doc:name="Logger" doc:id="23c08177-1a5a-4ba8-86b4-c6e76ac2c03d" message='#[payload]'/>
+		<choice doc:name="Choice" doc:id="4266bc9b-24a5-4c6a-a709-474b7b305cec" >
+			<when expression='#[payload.piece."_id" == null]'>
+				<ee:transform doc:name="Set Id and user_id" doc:id="49eba14d-cf8e-407f-9728-4f0360f3eb17">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var piece = payload.piece
+---
+{
+	"_id": uuid(),
+	"name": piece.name,
+	"composer": piece.composer,
+	"inlist": if(piece.inlist == Null) true else (piece.inlist),  
+	"user_id": payload.user_id
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			</ee:variables>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<os:retrieve doc:name="Retrieve existing one" doc:id="d260da2b-58fb-491f-b9de-b95b1963de4f" key='#[payload.piece["_id"]]' objectStore="Object_store_Piece" target="existingPiece">
+		</os:retrieve>
+				<ee:transform doc:name="Transform Message merge" doc:id="661af745-b930-4715-af94-06835ddf4856" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+vars.existingPiece ++ payload.piece]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="3f5ca588-3dde-4747-be85-7fc14c7c1d08" message="#[payload]"/>
+		<os:store doc:name="Upsert Piece" doc:id="ddf97171-c548-4925-acca-518be029c88c" objectStore="Object_store_Piece" key='#[payload["_id"]]'>
+
+		</os:store>
+	
+</flow>
+	<flow name="skd-piano-lesson-db-get-piece" doc:id="ad288bc8-e527-4928-9aae-61c9d3b35063" >
+		<logger level="INFO" doc:name="Logger" doc:id="1668919d-5988-4259-a3bc-d77f4aa17be2" message="#[payload]"/>
+		<os:retrieve doc:name="Retrieve" doc:id="660adc51-80ee-4f4c-930b-a18685c48f6f" key='#[payload["_id"]]' objectStore="Object_store_Piece"/>
+	</flow>
+	<flow name="skd-piano-lesson-db-get-pieces" doc:id="6f9d400d-65ed-4a77-b258-dcffacd627eb" >
+		<os:retrieve-all doc:name="Retrieve all" doc:id="7b1a511e-acab-4afa-b4e1-512add729e5a" objectStore="Object_store_Piece"/>
+		<ee:transform doc:name="Transform Message values" doc:id="1f03be58-dd9d-44c4-8ea4-3c36953c79b6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+valuesOf(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+	
+</flow>
+	<flow name="skd-piano-lesson-db-create-recording" doc:id="3f858280-f340-4642-b1e6-21f35309157b">
+		<logger level="INFO" doc:name="Logger" doc:id="3d3e16e6-20db-464d-a36e-8d40f59d11d9" message='#[payload]'/>
+		<os:retrieve doc:name="Retrieve piece" doc:id="47c739a3-6720-43b2-b4a4-d01dee0c3df5" key="#[payload.piece_id]" objectStore="Object_store_Piece" target="piece"/>
+		<ee:transform doc:name="Build recording" doc:id="6f000aed-5eee-4d08-99cc-72398363432f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var currentDt = now()
+//var datestring = currentDt as String {format: "yyyy-MM-dd"}
+var datestring = payload.datestring
+var yymmdd = currentDt as String {format: "yyyyMMddHHmmss"}
+var title = vars.piece.name ++ "(" ++ vars.piece.composer ++ ")" 
+var titleEncoded = title replace /[^\w\d\(\)\._\-À-ž\u0370-\u03FF\u0400-\u04FF]/ with("-") 
+var key = payload.user_id ++ "/" ++ datestring ++ "/" ++ titleEncoded ++ "-" ++ yymmdd ++ ".webm"
+---
+{
+	"_id": uuid(),
+	"user_id": payload.user_id,
+	"piece_id": payload.piece_id,
+	"date": datestring,
+	"datetime": currentDt,
+	"bucket": "skd-piano-lesson",
+	"key": key
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="312936cf-3ef4-4776-8690-c2e0ca94b19f" message="#[payload]"/>
+		<os:store doc:name="Create Recording" doc:id="96dc175a-cdb4-4cf6-b175-585e3a083510" objectStore="Object_store_Recording" key='#[payload["_id"]]'>
+			<os:value ><![CDATA[#[output text/plain --- write(payload, "application/json")]]]></os:value>
+
+		</os:store>
+	
+</flow>
+	<flow name="skd-piano-lesson-db-get-recording" doc:id="26047f0e-acb7-4037-9351-e7ceff8be982" >
+		<logger level="INFO" doc:name="Logger" doc:id="79dedca8-2f25-4367-8040-fa246761d9ee" message="#[payload]" />
+		<os:retrieve doc:name="Retrieve" doc:id="e272392c-c1c2-4ec4-ac7f-5c75d14e9a34" key='#[payload["_id"]]' objectStore="Object_store_Recording"/>
+		<ee:transform doc:name="Transform Message" doc:id="f3ab9330-637f-49c8-a1fd-d06b8f582ccf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+read(payload, "application/json")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</flow>
+	<flow name="skd-piano-lesson-db-get-recordings" doc:id="6a7ae991-1e5a-4e13-a539-647f07594158" >
+		<logger level="INFO" doc:name="Logger" doc:id="aac6a528-2835-48b0-ab12-dfab11bd858e" message="#[payload]"/>
+		<os:retrieve-all doc:name="Retrieve all" doc:id="206e6f2a-93e4-4e94-995f-07a8dda641d6" objectStore="Object_store_Recording"/>
+		<logger level="INFO" doc:name="Logger" doc:id="309bcfbb-0445-43f8-b2b9-6543c2d89521" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="6621b055-5fbf-4423-89bf-635d64d8fda2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+valuesOf(payload) map(v,i) -> (read(v, "application/json"))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4d2a30dd-3991-4ec3-958b-51cbd9f0cb3a" message="#[output application/json --- payload]"/>
+	
+	
+</flow>
+
+</mule>

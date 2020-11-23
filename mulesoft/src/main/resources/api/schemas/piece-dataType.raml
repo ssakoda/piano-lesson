@@ -1,0 +1,40 @@
+#%RAML 1.0 DataType
+displayName: Piece
+type: object
+
+properties:
+  _id: 
+    displayName: Id
+    type: string
+    required: false
+    description: unique Id of the Piece
+  name:
+    displayName: Name
+    type: string
+    required: false
+    default:  display name of the Piece
+  composer:
+    displayName: Composer
+    type: string
+    required: false
+    description: composer name of the Piece
+  inlist:
+    displayName: In List
+    type: boolean
+    required: false
+    default: true
+    description: true if this Piece is in the playlist
+  user_id:
+    displayName: User Id
+    type: string
+    required: false
+    default: owner's User Id of this Piece
+
+example: |
+  {
+    "name":"Rondo Alla Turca",
+    "composer":"Burgmüller",
+    "inlist":false,
+    "user_id":"5JEddTUBmqxIxn8G",
+    "_id":"H6eoUZXeEMeLNVAR"
+  }

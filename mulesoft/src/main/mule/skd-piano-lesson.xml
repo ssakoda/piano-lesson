@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="skd-piano-lesson-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {"Content-Type": "application/json"}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {"Content-Type": "application/json"}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="Flow Reference session validation" doc:id="ce296442-3747-4a89-8a04-3957822fe911" name="skd-piano-lesson-web-session-validation" />
+        <apikit:router config-ref="skd-piano-lesson-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ef6ab8e7-e208-45b9-a41a-df694dcdb93b" type="LOGIN:SESSION_EXPIRED">
+                <ee:transform doc:name="Transform Message" doc:id="953efc46-b90b-4f21-ab8b-75b4c6e86626" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Session Expired"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[401]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="skd-piano-lesson-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="skd-piano-lesson-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\composers:skd-piano-lesson-config">
+        <flow-ref doc:name="Flow Reference get pieces" doc:id="2d33a211-2c89-4472-a036-11eef73689f6" name="skd-piano-lesson-db-get-pieces" />
+        <logger level="INFO" doc:name="Logger" doc:id="3da22c77-976a-43f0-a42a-4bc93674288e" message="#[payload]" />
+        <logger level="INFO" doc:name="Logger" doc:id="9abc39cf-abde-4176-a3a2-6453a5cd2be8" message="#[vars.user_id]" />
+        <ee:transform doc:name="Transform Message filter user and extract composer" doc:id="8c69877f-c3c8-4249-a84a-8757c95acf89">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var pieces = payload filter (v, i) -> (v.user_id == vars.user_id)
+var composers = pieces map (v, i) -> (v.composer)
+---
+composers distinctBy $]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\me:skd-piano-lesson-config">
+        <ee:transform doc:name="Transform Message set user_id" doc:id="f55ff210-dcef-4e02-8a2f-cedbf1a0ec09">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"_id" : vars.user_id
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference get user" doc:id="d199c701-b0a0-435b-b4d6-fc1decbbc4ba" name="skd-piano-lesson-db-get-user" />
+    </flow>
+    <flow name="get:\pieces:skd-piano-lesson-config">
+        <set-variable value="#[if(attributes.queryParams.inlist == null) true as Boolean else attributes.queryParams.inlist as Boolean]" doc:name="Set Variable inlist" doc:id="b7040a77-6f18-49fd-91fc-4580cee7cf90" variableName="inlist" />
+        <logger level="INFO" doc:name="Logger" doc:id="41c3868d-e166-42fe-b303-b7b6d03cc546" message="#[&quot;inlist:&quot; ++ vars.inlist ++ &quot; user_id:&quot; ++ vars.user_id]" />
+        <flow-ref doc:name="Flow Reference get pieces" doc:id="0e37e697-9404-4ea3-9ff5-12c8d93bcab1" name="skd-piano-lesson-db-get-pieces" />
+        <logger level="INFO" doc:name="Logger" doc:id="8b718337-7ef9-4d6c-97f1-b7912f9b75c2" message="#[payload]" />
+        <ee:transform doc:name="Transform Message filter user and inlist" doc:id="591177c2-d40e-4ea2-a1b4-7d1cf3bb1d1a">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload filter (v, i) -> (v.user_id == vars.user_id and v.inlist as Boolean == vars.inlist)]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="eb6bd7dc-1c1e-467e-8907-c08330f67950" message="#[payload]" />
+    </flow>
+    <flow name="get:\playlist:skd-piano-lesson-config">
+        <flow-ref doc:name="Flow Reference get pieces" doc:id="3d73dc01-11cb-4108-958f-d3be5ff6c781" name="skd-piano-lesson-db-get-pieces" target="pieces" />
+        <logger level="INFO" doc:name="Logger" doc:id="44042bba-023a-403d-b0f9-8bc8d14ad51b" message="#[vars.pieces]" />
+        <ee:transform doc:name="Transform Message filter user and inlist=true and piece_id" doc:id="0f67b8fc-c927-4845-9367-d29734f99061">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="pieces"><![CDATA[%dw 2.0
+output application/java
+var pieces = vars.pieces filter (v, i) -> (v.inlist == true and v.user_id == vars.user_id)
+---
+if(attributes.queryParams.piece_id == null) pieces else (pieces filter (v, i) -> (v["_id"] == attributes.queryParams.piece_id))]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="9dd1ee7d-a7f5-4313-bdd1-99c8804d835d" message="#[vars.pieces]" />
+        <flow-ref doc:name="Flow Reference get recordings" doc:id="37f4d3e7-4f5b-4fe7-9564-4283da85fc7f" name="skd-piano-lesson-db-get-recordings" target="recordings" />
+        <logger level="INFO" doc:name="Logger" doc:id="71ef3f36-4f7c-4750-a85c-fe8a9adce310" message="#[output application/json --- vars.recordings]" />
+        <logger level="INFO" doc:name="Logger" doc:id="08fc4ce5-bddd-427f-966a-2590281e2fc4" message="#[vars.user_id]" />
+        <ee:transform doc:name="Transform Message filter pieces" doc:id="2e0c5870-2ed5-4639-9a29-b26fbe10d105">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var datestring = attributes.queryParams.datestring
+var recordings = vars.recordings as Array filter (v, i) -> (v.user_id == vars.user_id)
+var recArrayObj = recordings groupBy (recording) -> recording.piece_id
+var playlistArrayPrep = vars.pieces map(v, i) -> {
+	"user_id": v.user_id,
+	"piece": v,
+	"today": ((recArrayObj[(v["_id"])]  filter (v, i) -> (v.date == datestring)) orderBy (recording) -> recording.datetime) default [],
+	"last": ((recArrayObj[(v["_id"])]  filter (v, i) -> (v.date < datestring)) orderBy (recording) -> recording.datetime) default []
+}
+var playlistArray = playlistArrayPrep map(v, i) -> (
+	{
+	"user_id": v.user_id,
+	"piece": v.piece,
+	"done": if(sizeOf(v.today) == 0) false else true
+	} 
+	++ (if(sizeOf(v.today)>0) {"recording" : (v.today[-1 to 0])[0]} else {})
+	++ (if(sizeOf(v.last)>0) {"last_recording" : (v.last[-1 to 0])[0]} else {})
+)
+---
+playlistArray]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\recording\(id):skd-piano-lesson-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="b57363b0-d9b6-4228-b785-9867094be2df" message="#[attributes]" />
+        <logger level="INFO" doc:name="Logger" doc:id="54a07f55-549c-4b4b-8ff8-a5d9633fa9fe" message="#[vars.id]" />
+        <set-payload value="#[{&quot;_id&quot;: vars.id}]" doc:name="Set Payload recording_id" doc:id="9376d638-ecbf-4f56-ab01-f4b02dccfdff" />
+        <flow-ref doc:name="Flow Reference get recording" doc:id="b36d909e-472f-4aef-bf11-e02c2b3446bd" name="skd-piano-lesson-db-get-recording" target="recording" />
+        <logger level="INFO" doc:name="Logger" doc:id="8a07bdae-60f7-4e83-a52d-f8f6e0d1d2a6" message="#[vars.recording]" />
+        <s3:create-object-presigned-uri doc:name="Create object presigned uri" doc:id="606582f5-136b-4cfe-8761-22916a750b11" config-ref="Amazon_S3_Configuration" bucketName="${aws.s3.bucket_name}" key="#[vars.recording.key]" method="GET" target="signedUrl" />
+        <logger level="INFO" doc:name="Logger" doc:id="85f61f38-4e20-4038-8912-ffa48dc09921" message="#[vars.signedUrl]" />
+        <ee:transform doc:name="Transform Message With Signed URL" doc:id="adc7a067-9792-4c62-9c9f-90bd29c5a698">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"recording": vars.recording, 
+	"signedUrl": vars.signedUrl
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\user\(user_id):skd-piano-lesson-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="user_id">attributes.uriParams.'user_id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <set-payload value="#[{&quot;_id&quot;: vars.user_id}]" doc:name="Set Payload user_id" doc:id="9af816dd-b4ae-4921-8608-979767c7a320" />
+        <flow-ref doc:name="Flow Reference get user" doc:id="e6252dc3-f29c-47cd-840d-685c5e074f29" name="skd-piano-lesson-db-get-user" />
+    </flow>
+    <flow name="post:\piece:application\json:skd-piano-lesson-config">
+        <logger level="INFO" doc:name="Logger" doc:id="410748f1-4395-41be-851a-6c328cd427f9" message="#[payload]" />
+        <ee:transform doc:name="Transform Message add user_id" doc:id="edc67add-8e76-447e-b970-1f9bef3a6549">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"user_id": vars.user_id,
+	"piece": payload
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference upsert piece" doc:id="4ce83f52-a691-4901-805c-a23db8752cb7" name="skd-piano-lesson-db-upsert-piece" />
+    </flow>
+    <flow name="post:\start:application\json:skd-piano-lesson-config">
+        <ee:transform doc:name="Transform Message set user_id and piece_id" doc:id="83aa4eeb-6d79-4305-b3be-1228ac4e04d2">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"user_id": vars.user_id,
+	"piece_id": payload.piece_id,
+	"datestring": payload.datestring
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference create recording" doc:id="2186b008-d627-4b6b-bdc9-d8b64d6e04f5" name="skd-piano-lesson-db-create-recording" target="recording" />
+        <s3:initiate-multipart-upload doc:name="Initiate multipart upload" doc:id="d9f19171-0dff-48a4-9ad4-d33aebc67b97" config-ref="Amazon_S3_Configuration" bucketName="${aws.s3.bucket_name}" key="#[vars.recording.key]" target="uploadId" />
+        <logger level="INFO" doc:name="Log Upload output" doc:id="31ebed9d-3770-44a3-adc4-0e90ea5e1066" message="#[vars.uploadId]" />
+        <set-variable value="#[output application/json --- {  &quot;upload_id&quot;: vars.uploadId,  &quot;bucket&quot;: vars.recording.bucket,  &quot;key&quot;: vars.recording.key,     &quot;part_number&quot;: 0,     &quot;etags&quot;: [],     &quot;len&quot;: 0 }]" doc:name="Set Variable upload" doc:id="07ed353e-c355-4be2-9251-8e945e4cc3bd" variableName="upload" />
+        <os:store doc:name="Store uploadId" doc:id="55ffd609-ebed-4029-be2e-571645264d20" key="#[vars.recording.&quot;_id&quot;]" objectStore="Object_store_Uploads">
+            <os:value><![CDATA[#[vars.upload]]]></os:value>
+        </os:store>
+        <set-payload value="#[%dw 2.0 output application/json --- vars.recording ++  {  &quot;wshostname&quot;: &quot;${hostname}&quot;,   &quot;wsport&quot;: &quot;${wss.port}&quot; }]" doc:name="Set Payload recording" doc:id="ee2e2fc7-4999-422b-a1b6-9a775478c7bf" />
+    </flow>
+    <flow name="post:\stop:application\json:skd-piano-lesson-config">
+        <set-variable value="#[payload.recording_id]" doc:name="Set Variable" doc:id="ccb1032a-ddaa-4f51-828e-53e1b2f3c0d5" variableName="recording_id" />
+        <logger level="INFO" doc:name="Logger" doc:id="8cdea02d-777f-402b-a5c6-ff17873cd312" message="#[vars.recording_id]" />
+        <ee:transform doc:name="Transform Message recording_id" doc:id="84f54dcf-5488-4fcc-9371-3132c2b4b126">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"_id": vars.recording_id
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <os:retrieve doc:name="Retrieve uploads with recording_id" doc:id="3353eaf8-6169-4c06-9ad3-218cff1e58b3" key="#[vars.recording_id]" target="upload" objectStore="Object_store_Uploads" />
+        <logger level="INFO" doc:name="Logger" doc:id="252e7294-57d4-412b-a172-9200c6719c59" message="#[vars.upload]" />
+        <os:retrieve doc:name="Retrieve wskey form wsmap" doc:id="a87659a2-c039-4608-bcf8-d0a5b4aebc8e" key="#[vars.recording_id]" objectStore="Object_store_wsmap" target="wskey" />
+        <os:contains doc:name="Contains cache" doc:id="95860fed-579b-41f1-94c0-35aff3317d8d" key="#[vars.wskey]" objectStore="Object_store_cache" target="hasCache" />
+        <choice doc:name="Choice" doc:id="69da8628-a45d-4435-a2ea-a489d2ef2fc6">
+            <when expression="#[vars.hasCache == true]">
+                <os:retrieve doc:name="Retrieve cache" doc:id="0edcfebc-0b66-45c3-895d-8c18a69c3143" key="#[vars.wskey]" objectStore="Object_store_cache" target="cache" />
+                <s3:upload-part partSize="#[sizeOf(vars.cache)]" doc:name="Upload last part" doc:id="117b220c-76c5-4d97-af75-e769801614cb" config-ref="Amazon_S3_Configuration" isLastPart="true" bucketName="#[vars.upload.bucket]" key="#[vars.upload.key]" uploadId="#[vars.upload.upload_id]" partNumber="#[vars.upload.part_number as Number + 1]" target="uploadResult">
+                    <s3:content><![CDATA[#[vars.cache as Binary]]]></s3:content>
+                </s3:upload-part>
+                <set-variable value="#[output application/json --- {     &quot;upload_id&quot;: vars.upload.upload_id,     &quot;bucket&quot;: vars.upload.bucket,     &quot;key&quot;: vars.upload.key,     &quot;part_number&quot;: vars.upload.part_number as Number + 1,     &quot;etags&quot;: vars.upload.etags default [] ++ [vars.uploadResult],     &quot;len&quot;: vars.upload.len as Number + sizeOf(vars.cache) }]" doc:name="Set Variable upload" doc:id="1bd39d23-555e-448f-a676-7987af2ce1d1" variableName="upload" />
+                <os:remove doc:name="Remove cache" doc:id="feddfb83-2493-485f-84de-7c5f2fd678fe" key="#[vars.wskey]" objectStore="Object_store_cache" />
+            </when>
+        </choice>
+        <logger level="INFO" doc:name="Logger" doc:id="feac58c8-244e-485c-9f71-04c494c88d58" message="#[vars.upload]" />
+        <s3:complete-multipart-upload doc:name="Complete multipart upload" doc:id="e6829f9f-9c7a-4f08-a1d7-7b345154e3fe" config-ref="Amazon_S3_Configuration" bucketName="#[vars.upload.bucket]" key="#[vars.upload.key]" uploadId="#[vars.upload.upload_id]">
+            <s3:part-e-tags><![CDATA[#[vars.upload.etags]]]></s3:part-e-tags>
+        </s3:complete-multipart-upload>
+        <os:remove doc:name="Remove uploads with recording_id" doc:id="fe62b0d6-8172-4bbe-9180-eadfc84dca4c" key="#[vars.recording_id]" objectStore="Object_store_Uploads" />
+        <os:remove doc:name="Remove wskey from wsmap" doc:id="6fd42969-5a50-4ed3-9b6e-83ea03d9a930" key="#[vars.recording_id]" objectStore="Object_store_wsmap" />
+        <os:remove doc:name="Remove recording_id from wsmap" doc:id="17271b35-90d4-475d-b67b-f0d6e3aeb142" key="#[vars.wskey]" objectStore="Object_store_wsmap" />
+    </flow>
+    <flow name="post:\user:application\json:skd-piano-lesson-config">
+        <ee:transform doc:name="Transform Message hash password" doc:id="aa41edd9-bc36-4cef-991f-1ac832c2ab78">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+import java!com::skd::pianolesson::CryptoUtils
+var hashedPwd = CryptoUtils::sha256(payload.password)
+---
+payload ++ {"password": hashedPwd}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference upsert user" doc:id="357082c8-5965-4745-8c0f-938748a7022b" name="skd-piano-lesson-db-upsert-user" />
+    </flow>
+</mule>

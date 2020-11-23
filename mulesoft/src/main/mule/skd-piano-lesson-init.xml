@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="skd-piano-lesson-initFlow" doc:id="1be5670a-4328-4664-a543-2e96f2f77b92" >
+		<scheduler doc:name="Scheduler" doc:id="4714e11f-3fa3-4202-8661-c2e02c03dee9" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="100000" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve-all-keys doc:name="Retrieve all keys user" doc:id="a86d5a34-892b-4279-b32d-fd4f128437b5" objectStore="Object_store_User" target="users"/>
+		<choice doc:name="Choice" doc:id="cd2442e5-a7c7-486a-81c4-3a7678b0cc01" >
+			<when expression="#[sizeOf(vars.users) == 0]">
+				<ee:transform doc:name="Transform Message build admin user" doc:id="3dd007fc-75ef-4be0-9fd4-6e6eb3b4d5b8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"name" : "Admin",
+	"username" : "admin",
+	"password" : "admin"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<flow-ref doc:name="Flow Reference upsert user" doc:id="53b18a97-12b6-4b83-beda-779c611b5b38" name="skd-piano-lesson-db-upsert-user" />
+			</when>
+		</choice>
+	</flow>
+</mule>

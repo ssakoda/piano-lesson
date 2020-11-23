@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+    <apikit:config name="skd-piano-lesson-config" api="skd-piano-lesson.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8f6ec223-59a1-4a5c-b7b3-3abc9112b244">
+        <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="pianolesson.jks" alias="pianolesson" keyPassword="pianolesson" password="pianolesson" algorithm="PKIX" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+    <file:config name="File_Config" doc:name="File Config" doc:id="d3d819e0-1b90-4e2b-b08d-5a92209800d4">
+        <file:connection workingDir="${app.home}" />
+    </file:config>
+    <os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="0e2557c1-b765-4c58-a688-ff4236bd25c5">
+        <os:connection />
+    </os:config>
+    <os:object-store name="Object_store_Uploads" doc:name="Object store" doc:id="1c3d94c9-a474-479c-8fbc-78b367902e9c" />
+    <os:object-store name="Object_store_User" doc:name="Object store" doc:id="6fc253b0-23b7-4f16-81df-d6cb79ee5b5f" config-ref="ObjectStore_Config" />
+    <os:object-store name="Object_store_Piece" doc:name="Object store" doc:id="0e6fa258-35f2-4500-96e1-7f4f31e95a86" config-ref="ObjectStore_Config" />
+    <os:object-store name="Object_store_Recording" doc:name="Object store" doc:id="ca983858-be0a-4818-85a1-ab25b4354b99" />
+    <os:object-store name="Object_store_wsmap" doc:name="Object store" doc:id="83faada4-70b5-495f-85f4-4502d751a285" config-ref="ObjectStore_Config" />
+    <os:object-store name="Object_store_cache" doc:name="Object store" doc:id="b9ef9818-5c3c-41d9-af88-9622b7dbf107" config-ref="ObjectStore_Config" />
+    <s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="0ba0547f-1aca-46b9-af4d-5462e2d56ac0">
+        <s3:basic-connection accessKey="${aws.s3.accessKeyId}" secretKey="${aws.s3.secretAccessKey}" region="${aws.s3.region}" />
+    </s3:config>
+    <websocket:config name="WebSockets_Config" doc:name="WebSockets Config" doc:id="5d974dea-87ad-4fef-9aab-eff9b60e8dc1">
+        <websocket:connection>
+            <websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config" />
+        </websocket:connection>
+    </websocket:config>
+    <configuration-properties doc:name="Configuration properties" doc:id="8bdb74a6-8cc1-46be-a258-67d000301324" file="config.yaml" />
+</mule>

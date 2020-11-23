@@ -1,0 +1,16 @@
+aws:
+  s3:
+    region: "xxxxx"
+    accessKeyId: "xxxxx"
+    secretAccessKey: "xxxxx"
+    bucket_name: "xxxxx"
+
+hostname: "localhost"
+http:
+  port: "8081"
+https:
+  port: "8082"
+ws:
+  port: "8081"
+wss:
+  port: "8082"

@@ -1,0 +1,51 @@
+#%RAML 1.0 DataType
+displayName: Recording
+type: object
+
+properties:
+  _id: 
+    displayName: Id
+    type: string
+    required: false
+    description: unique Id of the Recording
+  user_id:
+    displayName: User Id
+    type: string
+    required: false
+    description: owner's User Id of the Recording
+  piece_id:
+    displayName: Piece Id
+    type: string
+    required: false
+    description: Piece Id which the Recording is for
+  date:
+    displayName: Date
+    type: string
+    required: false
+    description:  date (YYYY-MM-DD) of the lesson which the Recording for
+  datetime:
+    displayName: Datetime
+    type: datetime-only
+    required: false
+    description: the datetime recorded
+  bucket:
+    displayName: Bucket
+    type: string
+    required: false
+    description: name of the bucket which the recording is stored
+  key:
+    displayName: Key
+    type: string
+    required: false
+    description: key of the recording in S3
+
+example: |
+  {
+    "user_id":"5JEddTUBmqxIxn8G",
+    "piece_id":"TPjjzs1BSQOsa8G4",
+    "date":"2020-11-12",
+    "datetime": "2020-11-12T00:00:00.000",
+    "bucket":"skd-piano-lesson",
+    "key":"5JEddTUBmqxIxn8G/2020-11-12/Rondo-Alla-Turca(Burgmüller)-20201112024405.webm",
+    "_id":"0KF0iNhsQUBinG5B"
+  }
