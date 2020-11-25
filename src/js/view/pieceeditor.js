@@ -1,5 +1,4 @@
 import React from "react";
-import axios from 'axios';
 import Modal from "react-modal";
 import api from "../util/apiclient";
 
@@ -9,7 +8,7 @@ class PieceEditor extends React.Component {
     constructor(props){
         super(props);
         console.log("PieceEditor constructor");
-        console.log(props);
+        //console.log(props);
         this.state = {
             isEditMode: this.props.isEditMode,
             piece: {}
@@ -43,7 +42,7 @@ class PieceEditor extends React.Component {
             headers: {"Content-Type": "application/json"}
         }).then(data => {
             console.log("upserted OK");
-            console.log(data);
+            //console.log(data);
             this.handleCloseEditPiece();
         }).catch(err => {
             console.log("upserted NG");

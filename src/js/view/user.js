@@ -4,7 +4,7 @@ import api from "../util/apiclient";
 class User extends React.Component {
     constructor(props){
         super(props);
-        console.log(props);
+        //console.log(props);
         this.state = {
             errorMsg: "",
             user:{
@@ -24,7 +24,7 @@ class User extends React.Component {
                 "/api/user/" + this.props.match.params.user_id
             ).then(res => {
                 console.log("get user response");
-                console.log(res.data);
+                //console.log(res.data);
                 this.setState({user: {...this.state.user, ...res.data}});
             });
         }
@@ -51,7 +51,7 @@ class User extends React.Component {
             if(newUser._id == "") delete newUser._id;
             api.post("/api/user", newUser, {headers : {"Content-Type": "application/json"}}).then(data => {
                 console.log("user upserted");
-                console.log(data);
+                //console.log(data);
                 this.setState({user:{
                     name: "",
                     username: "",

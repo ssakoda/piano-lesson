@@ -1,5 +1,4 @@
 import React from "react";
-import axios from 'axios';
 import Modal from "react-modal";
 import api from "../util/apiclient";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
@@ -7,17 +6,6 @@ import 'react-tabs/style/react-tabs.css';
 import Autosuggest from 'react-autosuggest';
 
 Modal.setAppElement("#app");
-
-const languages = [
-    {
-      name: 'C',
-      year: 1972
-    },
-  ];
-  
-  
-  // 入力値に対するサジェスト項目を取得するロジック
-
   
   const theme = {
     container: 'react-autosuggest__container inputField col-12 col-md-9 col-lg-9',
@@ -36,12 +24,11 @@ const languages = [
     sectionTitle:             'react-autosuggest__section-title'
 }
 
-
 class PlaylistEditor extends React.Component {
     constructor(props){
         super(props);
         console.log("PlaylistEditor constructor");
-        console.log(props);
+        //console.log(props);
         this.state = {
             isEditMode: this.props.isEditMode,
             pieces: [],
@@ -65,7 +52,7 @@ class PlaylistEditor extends React.Component {
             {params: {inlist: false}} 
         ).then(res => {
             console.log("pieces response");
-            console.log(res.data);
+            //console.log(res.data);
             this.setState({pieces: res.data});
         }).then(() => {
             console.log("query composers:");
@@ -74,10 +61,10 @@ class PlaylistEditor extends React.Component {
             );
         }).then(res2 => {
             console.log("composers response:");
-            console.log(res2);
-            console.log("composers:");
+            //console.log(res2);
+            //console.log("composers:");
             const composers = res2.data;
-            console.log(composers);
+            //console.log(composers);
             this.setState({composers: composers});
         }).catch(err => {console.error(err);});
     }
@@ -116,7 +103,7 @@ class PlaylistEditor extends React.Component {
             headers: {"Content-Type": "application/json"}
         }).then(data => {
             console.log("upserted OK");
-            console.log(data);
+            //console.log(data);
             this.load();
             this.handleCloseEditPiece();
         }).catch(err => {
@@ -135,10 +122,10 @@ class PlaylistEditor extends React.Component {
     onSuggestionsFetchRequested({ value }){
         console.log('onSuggestionsFetchRequested');
         const suggestions = this.getSuggestions(value);
-        console.log("suggestions");
-        console.log(suggestions);
+        //console.log("suggestions");
+        //console.log(suggestions);
         this.setState({suggestions: suggestions});
-        console.log(this.state.suggestions);
+        //console.log(this.state.suggestions);
     }
 
     onSuggestionsClearRequested(){
@@ -159,9 +146,9 @@ class PlaylistEditor extends React.Component {
     getSuggestions(value){
         const inputValue = value.trim().toLowerCase();
         const inputLength = inputValue.length;
-        console.log(`inputValue=${inputValue} inputLength=${inputLength}`);
+        //console.log(`inputValue=${inputValue} inputLength=${inputLength}`);
         const result = inputLength === 0 ? [] : this.state.composers.filter((composer) =>{
-            console.log(`composer.toLowerCase().slice(0, inputLength) = ${composer.toLowerCase().slice(0, inputLength)}`);
+            //console.log(`composer.toLowerCase().slice(0, inputLength) = ${composer.toLowerCase().slice(0, inputLength)}`);
             return composer.toLowerCase().slice(0, inputLength) === inputValue;
         });
         console.log(result);

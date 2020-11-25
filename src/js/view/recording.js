@@ -1,9 +1,6 @@
 import React from "react";
-import io from "socket.io-client";
-import axios from 'axios';
 import api from "../util/apiclient";
 import { Link } from "react-router-dom";
-import appcss from "../../css/app.css";
 
 const MAX_SIZE = 50 * 1024 * 1024;
 
@@ -18,7 +15,7 @@ class Recording extends React.Component {
           datestring: this.props.match.params.datestring,
           totalSize: 0
         };
-        console.log(props);
+        //console.log(props);
     }
 
     componentDidMount(){
@@ -33,45 +30,14 @@ class Recording extends React.Component {
         };
         console.log("object set");
         this.stream = stream;
-        /*
-        //const socket = io("ws://localhost:8081");
-        const socket = new WebSocket("ws://localhost:8081/ws/data");
-        this.socket = socket;
-        console.log(socket);
-        
-        //socket.on("connect", () => {console.log("client connected");});
-        //socket.on("event", (e) => {console.log("client event"); console.log(e);});
-        //socket.on("distconnect", () => {console.log("client disconnected");});
-      
-        socket.onopen = () => {console.log("client opened");}
-        socket.onmessage = (e) => {console.log("client message"); console.log(e);}
-        socket.onerror = (e) => {console.log("client error"); console.log(e);}
-        socket.onclose = () => {console.log("client closed");}
-        */
        return stream;
       }).then((stream) => {
         const mediaRecorder = new MediaRecorder(stream);
         this.mediaRecorder = mediaRecorder;
         mediaRecorder.ondataavailable = (e) => {
-          console.log(e);
+          //console.log(e);
           this.setState({totalSize: this.state.totalSize + e.data.size});
-          this.socket.send(e.data);
-          /*
-          //this.socket.emit("message", {recording_id: this.state.recording._id, data: e.data});
-          let data = {recording_id: this.state.recording._id};
-          console.log(data);
-
-          const reader = new FileReader(); 
-          reader.readAsDataURL(e.data); 
-          const _socket = this.socket;
-          reader.onloadend = () => { 
-            const base64String = reader.result; 
-            const blobtext = base64String.substr(base64String.indexOf(', ') + 1); 
-            data.data = blobtext;  
-            _socket.send(JSON.stringify(data));
-          }
-          */
-          
+          this.socket.send(e.data);          
           if(this.state.totalSize > MAX_SIZE) this.stopRecording();
           if(this.state.isStopped == true){
             console.log("last parts is sent, calling stop...");
@@ -81,7 +47,7 @@ class Recording extends React.Component {
               {recording_id: this.state.recording._id},
               {headers:{"Content-type" : "application/json"}} 
             ).then((resp) => {
-              console.log(resp.data);
+              //console.log(resp.data);
               console.log("calling stop");
               if(this.socket && this.socket.connected){
                   //this.socket.disconnect();
@@ -110,11 +76,11 @@ class Recording extends React.Component {
         {piece_id: lesson.piece._id, datestring: this.state.datestring},
         {headers:{"Content-type" : "application/json"}} 
       ).then(res => {
-          console.log(res);
+          //console.log(res);
           this.setState({isStopped: false,  recording: res.data});
-          const socket = new WebSocket("wss://" + res.data.wshostname + ":" + res.data.wsport + "/ws/data");
+          const socket = new WebSocket(res.data.wsprotocol + "://" + res.data.wshostname + ":" + res.data.wsport + "/ws/data");
           this.socket = socket;
-          console.log(socket);        
+          //console.log(socket);        
           socket.onopen = () => {
             console.log("client opened");
             socket.send(JSON.stringify({recording_id: res.data._id}));
@@ -133,8 +99,10 @@ class Recording extends React.Component {
       if(this.mediaRecorder && this.mediaRecorder.state != "inactive"){
         this.mediaRecorder.stop();
       }else{
-        //this.socket.disconnect();
-        this.socket.close();
+        if(this.socket && this.socket.readyState < 2){
+          //this.socket.disconnect();
+          this.socket.close();
+        }
       }
       this.setState({isStopped: true});
     }
@@ -142,7 +110,7 @@ class Recording extends React.Component {
     render() {
       console.log("Recording render");
       const {piece} = this.props.match.params;
-      console.log(piece);
+      //console.log(piece);
       let recordButton = (
         <button className="btn btn-danger btnLesson" onClick={this.startRecording.bind(this)}>
           <i className="material-icons icons">fiber_manual_record</i>

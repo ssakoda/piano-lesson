@@ -1,20 +1,17 @@
 import React from "react";
-import axios from 'axios';
 import { Link } from "react-router-dom";
 import datetimeUtil from "../util/datetime";
 import api from "../util/apiclient";
-import appcss from "../../css/app.css";
-
 
 class Lesson extends React.Component {
     constructor(props){
         super(props);
-        console.log(props);
+        //console.log(props);
         this.state = {lesson: this.props.data.lesson, datestring: this.props.match.params.datestring};
     }
     componentDidMount(){
         const {piece} = this.props.match.params;
-        console.log(piece);
+        //console.log(piece);
         console.log("lesseon request");
         api.get(
             "/api/playlist", 
@@ -24,7 +21,7 @@ class Lesson extends React.Component {
             }} 
         ).then(res => {
             console.log("playlist response");
-            console.log(res.data);
+            //console.log(res.data);
             this.setState({lesson: res.data[0]});
             this.props.data.lesson = res.data[0];
         }).catch(err => {console.error(err);});
@@ -32,7 +29,7 @@ class Lesson extends React.Component {
     render() {     
         console.log("lesson render");   
         const {piece} = this.props.match.params;           
-        console.log(piece);
+        //console.log(piece);
         //console.log(this.props.data);
         //const lesson = this.props.data.lesson;
         const lesson = this.state.lesson;

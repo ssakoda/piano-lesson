@@ -10,7 +10,6 @@ http:
   port: "8081"
 https:
   port: "8082"
-ws:
-  port: "8081"
-wss:
+websocket:
   port: "8082"
+  protocol: "wss"

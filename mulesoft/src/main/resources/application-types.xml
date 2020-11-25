@@ -1,4 +1,45 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
-  <types:catalog/>
+  <types:catalog>
+    <types:type name="sec-websocket-key" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    headers:
+        properties:
+            sec-websocket-key:
+                type: string
+]]></types:shape>
+    </types:type>
+    <types:type name="wskey" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="binary-payload" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: array
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#4e1101ce-a983-4b4a-a4d1-901fce79374d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="sec-websocket-key"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#d006e8a0-66c5-46da-b7f7-a23b51299b10">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="binary-payload"/>
+        </types:message>
+        <types:variables>
+          <types:variable name="wskey" type="wskey"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
 </types:mule>

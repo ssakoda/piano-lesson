@@ -1,5 +1,4 @@
 import React from "react";
-import axios from 'axios';
 import Playlist from './playlist';
 import Lesson from './lesson';
 import Recording from './recording';
@@ -7,7 +6,7 @@ import Player from './player';
 import datetimeUtil from "../util/datetime";
 import api from "../util/apiclient";
 import { Route, Redirect } from "react-router-dom";
-
+import appcss from "../../css/app.css";
 
 class App extends React.Component {
     constructor(props){
@@ -26,7 +25,7 @@ class App extends React.Component {
           "/api/me"
       ).then(res => {
           console.log("me response");
-          console.log(res.data);
+          //console.log(res.data);
           this.setState({user: res.data});
       });
     }

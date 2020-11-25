@@ -80,6 +80,12 @@ span.icons {
     margin: 10px 10px;
 }
 
+span.label {
+    display:table-cell;
+    vertical-align: middle;
+    font-size: 6px;
+}
+
 .btnLabel{
     vertical-align: middle;
     display: table-cell;

@@ -238,7 +238,7 @@ playlistArray]]></ee:set-payload>
         <set-payload value="#[{&quot;_id&quot;: vars.id}]" doc:name="Set Payload recording_id" doc:id="9376d638-ecbf-4f56-ab01-f4b02dccfdff" />
         <flow-ref doc:name="Flow Reference get recording" doc:id="b36d909e-472f-4aef-bf11-e02c2b3446bd" name="skd-piano-lesson-db-get-recording" target="recording" />
         <logger level="INFO" doc:name="Logger" doc:id="8a07bdae-60f7-4e83-a52d-f8f6e0d1d2a6" message="#[vars.recording]" />
-        <s3:create-object-presigned-uri doc:name="Create object presigned uri" doc:id="606582f5-136b-4cfe-8761-22916a750b11" config-ref="Amazon_S3_Configuration" bucketName="${aws.s3.bucket_name}" key="#[vars.recording.key]" method="GET" target="signedUrl" />
+        <s3:create-object-presigned-uri doc:name="Create object presigned uri" doc:id="606582f5-136b-4cfe-8761-22916a750b11" config-ref="Amazon_S3_Configuration" bucketName="#[vars.recording.bucket]" key="#[vars.recording.key]" method="GET" target="signedUrl" />
         <logger level="INFO" doc:name="Logger" doc:id="85f61f38-4e20-4038-8912-ffa48dc09921" message="#[vars.signedUrl]" />
         <ee:transform doc:name="Transform Message With Signed URL" doc:id="adc7a067-9792-4c62-9c9f-90bd29c5a698">
             <ee:message>
@@ -296,7 +296,14 @@ output application/java
         <os:store doc:name="Store uploadId" doc:id="55ffd609-ebed-4029-be2e-571645264d20" key="#[vars.recording.&quot;_id&quot;]" objectStore="Object_store_Uploads">
             <os:value><![CDATA[#[vars.upload]]]></os:value>
         </os:store>
-        <set-payload value="#[%dw 2.0 output application/json --- vars.recording ++  {  &quot;wshostname&quot;: &quot;${hostname}&quot;,   &quot;wsport&quot;: &quot;${wss.port}&quot; }]" doc:name="Set Payload recording" doc:id="ee2e2fc7-4999-422b-a1b6-9a775478c7bf" />
+        <set-payload value='#[%dw 2.0 
+output application/json 
+--- 
+vars.recording ++  {  
+	"wshostname": "${hostname}",   
+	"wsport": "${websocket.port}",
+	"wsprotocol": "${websocket.protocol}"
+}]' doc:name="Set Payload recording" doc:id="ee2e2fc7-4999-422b-a1b6-9a775478c7bf" />
     </flow>
     <flow name="post:\stop:application\json:skd-piano-lesson-config">
         <set-variable value="#[payload.recording_id]" doc:name="Set Variable" doc:id="ccb1032a-ddaa-4f51-828e-53e1b2f3c0d5" variableName="recording_id" />
