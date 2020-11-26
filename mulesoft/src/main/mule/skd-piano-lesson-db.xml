@@ -130,20 +130,19 @@ valuesOf(payload)]]></ee:set-payload>
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 var currentDt = now()
-//var datestring = currentDt as String {format: "yyyy-MM-dd"}
 var datestring = payload.datestring
 var yymmdd = currentDt as String {format: "yyyyMMddHHmmss"}
-var title = vars.piece.name ++ "(" ++ vars.piece.composer ++ ")" 
+var title = (vars.piece.name default "") ++ "(" ++ (vars.piece.composer default "") ++ ")" 
 var titleEncoded = title replace /[^\w\d\(\)\._\-À-ž\u0370-\u03FF\u0400-\u04FF]/ with("-") 
-var key = payload.user_id ++ "/" ++ datestring ++ "/" ++ titleEncoded ++ "-" ++ yymmdd ++ ".webm"
+var key = payload.user_id ++ "/" ++ datestring ++ "/" ++ titleEncoded ++ ".webm"
 ---
 {
-	"_id": uuid(),
+	"_id": if(payload.recording_id == null) uuid() else payload.recording_id,
 	"user_id": payload.user_id,
 	"piece_id": payload.piece_id,
 	"date": datestring,
 	"datetime": currentDt,
-	"bucket": "skd-piano-lesson",
+	"bucket": p("aws.s3.bucket_name"),
 	"key": key
 }]]></ee:set-payload>
 			</ee:message>
@@ -173,16 +172,14 @@ read(payload, "application/json")]]></ee:set-payload>
 	<flow name="skd-piano-lesson-db-get-recordings" doc:id="6a7ae991-1e5a-4e13-a539-647f07594158" >
 		<logger level="INFO" doc:name="Logger" doc:id="aac6a528-2835-48b0-ab12-dfab11bd858e" message="#[payload]"/>
 		<os:retrieve-all doc:name="Retrieve all" doc:id="206e6f2a-93e4-4e94-995f-07a8dda641d6" objectStore="Object_store_Recording"/>
-		<logger level="INFO" doc:name="Logger" doc:id="309bcfbb-0445-43f8-b2b9-6543c2d89521" message="#[payload]"/>
 		<ee:transform doc:name="Transform Message" doc:id="6621b055-5fbf-4423-89bf-635d64d8fda2" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
----
+--- 
 valuesOf(payload) map(v,i) -> (read(v, "application/json"))]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="4d2a30dd-3991-4ec3-958b-51cbd9f0cb3a" message="#[output application/json --- payload]"/>
 	
 	
 </flow>

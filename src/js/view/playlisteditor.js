@@ -151,7 +151,7 @@ class PlaylistEditor extends React.Component {
             //console.log(`composer.toLowerCase().slice(0, inputLength) = ${composer.toLowerCase().slice(0, inputLength)}`);
             return composer.toLowerCase().slice(0, inputLength) === inputValue;
         });
-        console.log(result);
+        //console.log(result);
         return result;
     }
 

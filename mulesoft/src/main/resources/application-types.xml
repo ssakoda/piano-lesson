@@ -20,6 +20,233 @@ type: string]]></types:shape>
 type: array
 ]]></types:shape>
     </types:type>
+    <types:type name="User" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+displayName: User
+type: object
+
+properties:
+  _id: 
+    displayName: Id
+    type: string
+    required: false
+    description: unique Id of the User
+  name:
+    displayName: Name
+    type: string
+    required: false
+    description: display name of the User
+  username:
+    displayName: Username
+    type: string
+    required: false
+    description: login username of the User
+  password:
+    displayName: Password
+    type: string
+    required: false
+    description: login password of the User (encrypted)
+
+example: |
+  {
+    "name":"Saki",
+    "username":"saki",
+    "password":"XXXXXENCRYPTEDXXXXX",
+    "_id":"5JEddTUBmqxIxn8G"
+  }
+
+]]></types:shape>
+    </types:type>
+    <types:type name="id-for-get" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    _id:
+        type: string
+]]></types:shape>
+    </types:type>
+    <types:type name="Piece" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+displayName: Piece
+type: object
+
+properties:
+  _id: 
+    displayName: Id
+    type: string
+    required: false
+    description: unique Id of the Piece
+  name:
+    displayName: Name
+    type: string
+    required: false
+    default:  display name of the Piece
+  composer:
+    displayName: Composer
+    type: string
+    required: false
+    description: composer name of the Piece
+  inlist:
+    displayName: In List
+    type: boolean
+    required: false
+    default: true
+    description: true if this Piece is in the playlist
+  user_id:
+    displayName: User Id
+    type: string
+    required: false
+    description: owner's User Id of this Piece
+
+example: |
+  {
+    "name":"Rondo Alla Turca",
+    "composer":"Burgmüller",
+    "inlist":false,
+    "user_id":"5JEddTUBmqxIxn8G",
+    "_id":"H6eoUZXeEMeLNVAR"
+  }]]></types:shape>
+    </types:type>
+    <types:type name="Piece-Upsert-Input" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    user_id:
+        type: string
+    piece:
+      properties:
+        _id: 
+          displayName: Id
+          type: string
+          required: false
+          description: unique Id of the Piece
+        name:
+          displayName: Name
+          type: string
+          required: false
+          default:  display name of the Piece
+        composer:
+          displayName: Composer
+          type: string
+          required: false
+          description: composer name of the Piece
+        inlist:
+          displayName: In List
+          type: boolean
+          required: false
+          default: true
+          description: true if this Piece is in the playlist
+        user_id:
+          displayName: User Id
+          type: string
+          required: false
+          description: owner's User Id of this Piece]]></types:shape>
+    </types:type>
+    <types:type name="Create-Recording-Input" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    user_id:
+        type: string
+    piece_id:
+        type: string
+    datestring:
+        type: string]]></types:shape>
+    </types:type>
+    <types:type name="Recording" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+displayName: Recording
+type: object
+
+properties:
+  _id: 
+    displayName: Id
+    type: string
+    required: false
+    description: unique Id of the Recording
+  user_id:
+    displayName: User Id
+    type: string
+    required: false
+    description: owner's User Id of the Recording
+  piece_id:
+    displayName: Piece Id
+    type: string
+    required: false
+    description: Piece Id which the Recording is for
+  date:
+    displayName: Date
+    type: string
+    required: false
+    description:  date (YYYY-MM-DD) of the lesson which the Recording for
+  datetime:
+    displayName: Datetime
+    type: datetime-only
+    required: false
+    description: the datetime recorded
+  bucket:
+    displayName: Bucket
+    type: string
+    required: false
+    description: name of the bucket which the recording is stored
+  key:
+    displayName: Key
+    type: string
+    required: false
+    description: key of the recording in S3
+
+example: |
+  {
+    "user_id":"5JEddTUBmqxIxn8G",
+    "piece_id":"TPjjzs1BSQOsa8G4",
+    "date":"2020-11-12",
+    "datetime": "2020-11-12T00:00:00.000",
+    "bucket":"skd-piano-lesson",
+    "key":"5JEddTUBmqxIxn8G/2020-11-12/Rondo-Alla-Turca(Burgmüller)-20201112024405.webm",
+    "_id":"0KF0iNhsQUBinG5B"
+  }
+]]></types:shape>
+    </types:type>
+    <types:type name="JSON-String" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="JSON-String-Object" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+     /(\w+)/:
+        type: any
+]]></types:shape>
+    </types:type>
+    <types:type name="cookie" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    headers:
+        properties:
+            cookie:
+                type: string
+]]></types:shape>
+    </types:type>
+    <types:type name="Id" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+    <types:type name="Login-Input" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+properties:
+    username:
+        type: string
+    password:
+        type: string
+]]></types:shape>
+    </types:type>
+    <types:type name="String" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#4e1101ce-a983-4b4a-a4d1-901fce79374d">
     <types:processor-declaration>
@@ -40,6 +267,185 @@ type: array
           <types:variable name="wskey" type="wskey"/>
         </types:variables>
       </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#4af1cbbe-b287-432b-b266-7d626824e315">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="User"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="User"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2ca4327e-077c-462d-9835-590fbed86452">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="id-for-get"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="User"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#970a7890-c0ab-4597-8926-7a3b09f82d57">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="User[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#e495f7fb-8324-4bc7-b7e9-1ab7dc0bcfb7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Piece-Upsert-Input"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Piece"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ad288bc8-e527-4928-9aae-61c9d3b35063">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="id-for-get"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Piece"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#6f9d400d-65ed-4a77-b258-dcffacd627eb">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Piece[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#3f858280-f340-4642-b1e6-21f35309157b">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Create-Recording-Input"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Recording"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#6f000aed-5eee-4d08-99cc-72398363432f">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:variables>
+          <types:variable name="piece" type="Piece"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#26047f0e-acb7-4037-9351-e7ceff8be982">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="id-for-get"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Recording"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#f3ab9330-637f-49c8-a1fd-d06b8f582ccf">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="JSON-String"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#6a7ae991-1e5a-4e13-a539-647f07594158">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Recording[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#6621b055-5fbf-4423-89bf-635d64d8fda2">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="JSON-String-Object"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#27d44c13-9533-4e3d-9243-1953dd466e01">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="cookie"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="user_id" type="Id"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#5d093465-a3a7-4a56-88e2-182c9f9a8b60"/>
+  <types:enrichment select="#b94ebbb8-5e61-427c-84d7-3d045a69642d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Login-Input"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="cookie" type="String"/>
+        </types:variables>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#052efd8e-d5de-4853-a8b0-a51c36220df5"/>
+  <types:enrichment select="#3ca1cddb-ada9-48fc-bdd9-57468b385bc6"/>
+  <types:enrichment select="#2d8e7f11-b020-4199-833a-9a98f8487994">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:variables>
+          <types:variable name="cookie" type="String"/>
+          <types:variable name="user_id" type="Id"/>
+        </types:variables>
+      </types:output-event>
     </types:processor-declaration>
   </types:enrichment>
 </types:mule>

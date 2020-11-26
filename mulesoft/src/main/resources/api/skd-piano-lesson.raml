@@ -2,9 +2,9 @@
 title: skd-piano-lesson
 
 types:
-  Error:    
+  AuthorizationError:    
     example:
-      {message : "Unknown error"}
+      {message: "Session Expired"}
     properties:
       message:
         type: string
@@ -27,7 +27,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 /user:
   post:
@@ -45,7 +45,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
   /{user_id}:
     uriParameters:
@@ -65,7 +65,7 @@ types:
           description: Unauthorized error
           body:
             application/json:
-              type: Error
+              type: AuthorizationError
 
 /pieces:
   get:
@@ -84,7 +84,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 /piece:
   post:
@@ -102,7 +102,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 
 /playlist:
@@ -126,7 +126,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 /composers:
   get:
@@ -145,7 +145,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 /recording:
   /{id}:
@@ -171,12 +171,12 @@ types:
           description: Unauthorized error
           body:
             application/json:
-              type: Error
+              type: AuthorizationError
 
 /start:
   post:
     displayName: start recording
-    description: start recording by creating a recording record and preparing multi-part upload
+    description: start recording by creating a recording record (or overriding existing recording) and preparing multi-part upload
     body:
       application/json:
         properties:
@@ -190,6 +190,11 @@ types:
             description: Lesson date in YYYY-MM-DD format
             type: string
             required: true
+          recording_id:
+            displayName: Recording Id to override
+            description: Id of the recording to override
+            type: string
+            required: false
     responses:
       200:
         body:
@@ -199,7 +204,7 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
           
 
 /stop:
@@ -236,6 +241,6 @@ types:
         description: Unauthorized error
         body:
           application/json:
-            type: Error
+            type: AuthorizationError
 
 

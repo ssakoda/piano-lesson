@@ -1,0 +1,15 @@
+aws:
+  s3:
+    region: "TEST-REGION"
+    accessKeyId: "TEST-ACCESS-KEY"
+    secretAccessKey: "TEST-SECRET-ACCESS-KEY"
+    bucket_name: "TEST-BUCKET-NAME"
+
+hostname: "localhost"
+http:
+  port: "8081"
+https:
+  port: "8082"
+websocket:
+  port: "8082"
+  protocol: "wss"

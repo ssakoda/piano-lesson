@@ -71,9 +71,13 @@ class Recording extends React.Component {
       }
       console.log("start recording...");
       const lesson = this.props.data.lesson;
+      let param = {piece_id: lesson.piece._id, datestring: this.state.datestring};
+      if(this.props.data && this.props.data.lesson && this.props.data.lesson.done == true && this.props.data.lesson.recording){
+        param.recording_id = this.props.data.lesson.recording._id;
+      }
       api.post(
         "/api/start", 
-        {piece_id: lesson.piece._id, datestring: this.state.datestring},
+        param,
         {headers:{"Content-type" : "application/json"}} 
       ).then(res => {
           //console.log(res);

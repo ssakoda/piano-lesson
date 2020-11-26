@@ -198,7 +198,6 @@ if(attributes.queryParams.piece_id == null) pieces else (pieces filter (v, i) ->
         </ee:transform>
         <logger level="INFO" doc:name="Logger" doc:id="9dd1ee7d-a7f5-4313-bdd1-99c8804d835d" message="#[vars.pieces]" />
         <flow-ref doc:name="Flow Reference get recordings" doc:id="37f4d3e7-4f5b-4fe7-9564-4283da85fc7f" name="skd-piano-lesson-db-get-recordings" target="recordings" />
-        <logger level="INFO" doc:name="Logger" doc:id="71ef3f36-4f7c-4750-a85c-fe8a9adce310" message="#[output application/json --- vars.recordings]" />
         <logger level="INFO" doc:name="Logger" doc:id="08fc4ce5-bddd-427f-966a-2590281e2fc4" message="#[vars.user_id]" />
         <ee:transform doc:name="Transform Message filter pieces" doc:id="2e0c5870-2ed5-4639-9a29-b26fbe10d105">
             <ee:message>
@@ -210,8 +209,8 @@ var recArrayObj = recordings groupBy (recording) -> recording.piece_id
 var playlistArrayPrep = vars.pieces map(v, i) -> {
 	"user_id": v.user_id,
 	"piece": v,
-	"today": ((recArrayObj[(v["_id"])]  filter (v, i) -> (v.date == datestring)) orderBy (recording) -> recording.datetime) default [],
-	"last": ((recArrayObj[(v["_id"])]  filter (v, i) -> (v.date < datestring)) orderBy (recording) -> recording.datetime) default []
+	"today": ((recArrayObj[(v["_id"] default "")]  filter (v, i) -> (v.date == datestring)) orderBy (recording) -> recording.datetime) default [],
+	"last": ((recArrayObj[(v["_id"] default "")]  filter (v, i) -> (v.date < datestring)) orderBy (recording) -> recording.datetime) default []
 }
 var playlistArray = playlistArrayPrep map(v, i) -> (
 	{
@@ -286,7 +285,9 @@ output application/java
 	"user_id": vars.user_id,
 	"piece_id": payload.piece_id,
 	"datestring": payload.datestring
-}]]></ee:set-payload>
+}
+++ 
+if(payload.recording_id == null) {} else {"recording_id": payload.recording_id}]]></ee:set-payload>
             </ee:message>
         </ee:transform>
         <flow-ref doc:name="Flow Reference create recording" doc:id="2186b008-d627-4b6b-bdc9-d8b64d6e04f5" name="skd-piano-lesson-db-create-recording" target="recording" />
@@ -296,14 +297,7 @@ output application/java
         <os:store doc:name="Store uploadId" doc:id="55ffd609-ebed-4029-be2e-571645264d20" key="#[vars.recording.&quot;_id&quot;]" objectStore="Object_store_Uploads">
             <os:value><![CDATA[#[vars.upload]]]></os:value>
         </os:store>
-        <set-payload value='#[%dw 2.0 
-output application/json 
---- 
-vars.recording ++  {  
-	"wshostname": "${hostname}",   
-	"wsport": "${websocket.port}",
-	"wsprotocol": "${websocket.protocol}"
-}]' doc:name="Set Payload recording" doc:id="ee2e2fc7-4999-422b-a1b6-9a775478c7bf" />
+        <set-payload value="#[%dw 2.0  output application/json  ---  vars.recording ++  {    &quot;wshostname&quot;: &quot;${hostname}&quot;,     &quot;wsport&quot;: &quot;${websocket.port}&quot;,  &quot;wsprotocol&quot;: &quot;${websocket.protocol}&quot; }]" doc:name="Set Payload recording" doc:id="ee2e2fc7-4999-422b-a1b6-9a775478c7bf" />
     </flow>
     <flow name="post:\stop:application\json:skd-piano-lesson-config">
         <set-variable value="#[payload.recording_id]" doc:name="Set Variable" doc:id="ccb1032a-ddaa-4f51-828e-53e1b2f3c0d5" variableName="recording_id" />

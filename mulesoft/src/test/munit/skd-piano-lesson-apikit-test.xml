@@ -1,0 +1,864 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <munit:config name="skd-piano-lesson-apikit-test.xml" />
+    <http:request-config name="HTTP_Request_Configuration_munit" basePath="/api">
+        <http:request-connection host="localhost" port="8082" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</http:request-connection>
+    </http:request-config>
+    <http:request-config name="HTTP_Request_Configuration_munit_root" basePath="/">
+        <http:request-connection host="localhost" port="8082" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</http:request-connection>
+    </http:request-config>
+	<munit:before-test name="skd-piano-lesson-apikit-testBefore_Test" doc:id="2a692445-3af4-4514-a450-0c88f38ec6bc">
+		<flow-ref doc:name="Flow Reference init" doc:id="369d6c4d-2c0f-47a6-9bb2-23d01e307da9" name="skd-piano-lesson-initFlow" />
+	</munit:before-test>	
+	<munit:after-test name="skd-piano-lesson-apikit-testAfter_Test" doc:id="2af9d15b-d354-43bd-b246-aff5ef6f2dcc" >
+		<os:clear doc:name="Clear user" doc:id="82c6594b-c7c7-4aa1-92c8-e707c3eb7c5b" objectStore="Object_store_User"/>
+		<os:clear doc:name="Clear piece" doc:id="68d83744-bcb2-4b38-9060-fbdd0b0df9be" objectStore="Object_store_Piece"/>
+		<os:clear doc:name="Clear recording" doc:id="8ae60553-6532-4fa0-9651-548f252dc9cf" objectStore="Object_store_Recording"/>
+		<os:clear doc:name="Clear uploads" doc:id="e07a5c06-39c6-458a-8f73-30a80adfa5ab" objectStore="Object_store_Uploads"/>
+		<os:clear doc:name="Clear cache" doc:id="a5ad78b9-eccf-43c1-997c-b46ee2b0e183" objectStore="Object_store_cache"/>
+		<os:clear doc:name="Clear wsmap" doc:id="bd61bedc-29bc-43fd-ae8b-4f48e7e25f2d" objectStore="Object_store_wsmap"/>
+	</munit:after-test>
+	<flow name="skd-piano-lesson-apikit-test-session-setup" doc:id="2d8e7f11-b020-4199-833a-9a98f8487994" >
+		<os:retrieve-all doc:name="Retrieve all user" doc:id="bd2ea551-4cf8-42c6-89dc-6e21ae86e4d0" objectStore="Object_store_User" />
+		<ee:transform doc:name="Transform Message get admin" doc:id="052efd8e-d5de-4853-a8b0-a51c36220df5">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="user_id"><![CDATA[%dw 2.0
+output application/java
+---
+keysOf(payload filterObject (v, k, i) -> (v.username == "admin"))[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message set cookie" doc:id="3ca1cddb-ada9-48fc-bdd9-57468b385bc6">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="cookie"><![CDATA[%dw 2.0
+import java!com::skd::pianolesson::CryptoUtils
+output application/java
+---
+"plsessionId=" ++ CryptoUtils::generateJWT(vars.user_id) ++ ";"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<munit:test name="post:\piece:application\json:skd-piano-lesson-config-200-application\json-FlowTest-insert" description="Verifying functionality of [post:\piece:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\piece:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+			<flow-ref doc:name="Flow Reference session setup" doc:id="53e2966f-16ca-4660-be32-60cef0bfd409" name="skd-piano-lesson-apikit-test-session-setup"/>
+			<set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+			<http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/piece">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression='#[payload."_id"]' is="#[MunitTools::notNullValue()]" message="The response payload is not correct!" doc:name="Assert That - id is created" />
+			<munit-tools:assert-equals doc:name="Assert Payload is Expected" doc:id="edbc34e3-7851-48a7-a092-017ab1e0966d" actual="#[output
+application/java
+var inputText = MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json.json')
+var inputJson = read(inputText, &quot;application/json&quot;)
+---
+inputJson.name == payload.name and inputJson.composer == payload.composer and
+inputJson.inlist == payload.inlist and vars.user_id == payload.user_id]" expected="#[true]" message="No piece found"/>
+        </munit:validation>
+    </munit:test>
+	<munit:test name="post:\piece:application\json:skd-piano-lesson-config-200-application\json-FlowTest-update" description="Verifying functionality of [post:\piece:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\piece:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+			<flow-ref doc:name="Flow Reference session setup" doc:id="9e3ef450-533c-4df1-960e-c4d675d113e9" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json.json')]" />
+			<http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/piece" doc:name="Request insert">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+			<set-payload value="#[{&quot;_id&quot; : payload.&quot;_id&quot;} ++ read(MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json2.json'), &quot;application/json&quot;)]" doc:name="Set Payload for update" doc:id="64fe3980-a850-4135-adf8-721dc70fb354" />
+        </munit:behavior>
+        <munit:execution>
+			<http:request method="POST" doc:name="Request insert" doc:id="f973c2b5-b2ce-44b9-b60f-ac86a20220c2" config-ref="HTTP_Request_Configuration_munit" path="/piece" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+        </munit:execution>
+		<munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert Payload is expected" doc:id="9d4faed8-cb43-498d-b978-f13078f8cd78" actual="#[output
+application/java
+var inputText = MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json2.json')
+var inputJson = read(inputText, &quot;application/json&quot;)
+---
+inputJson.name == payload.name and inputJson.composer == payload.composer and
+inputJson.inlist == payload.inlist and vars.user_id == payload.user_id]" expected="#[true]" message="No piece found" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\piece:application\json:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [post:\piece:application\json:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\piece:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_piece_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/piece">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\playlist:skd-piano-lesson-config-200-application\json-FlowTest-all" description="Verifying functionality of [get:\playlist:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\playlist:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="a2d004a5-6e56-431f-aed9-4b8dc88da90d" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-1","composer":"A1","inlist":true}]' doc:name="Set Payload inlist=true piece 1" doc:id="f6234f46-7431-4c9f-9dbd-3ca3f4966143" />
+			<http:request method="POST" doc:name="Request insert piece 1" doc:id="b9602c50-95cd-4a32-a08d-eece228f6ee7" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece1">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-2","composer":"A2","inlist":true}]' doc:name="Set Payload inlist=true piece 2" doc:id="b6a5325f-f5f7-4f6f-9b99-af83c9609e69" />
+			<http:request method="POST" doc:name="Request insert piece 2" doc:id="9ffa7e05-2814-4f72-adeb-30cd1c749920" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece2">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-false","composer":"B","inlist":false}]' doc:name="Set Payload inlist=false piece" doc:id="28e04a78-a3fc-4c25-9e31-cadba4778c01" />
+			<http:request method="POST" doc:name="Request insert 3" doc:id="42bdeaaa-8823-4126-8336-8d155e4aa846" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece3">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<munit-tools:mock-when doc:name="Mock when Initiate multipart upload" doc:id="29999fc5-4cc6-4777-b475-d1b998893269" processor="s3:initiate-multipart-upload" >
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['UPLOADID']" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="uploadId" value="#['UPLOADID']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<set-payload value='#[output application/json --- {"user_id": vars.user_id, "piece_id": vars.piece1."_id", "datestring": "2020-11-29"}]' doc:name="Set Payload for start" doc:id="1054dfb6-6df5-4fb6-ac31-73c446af0001" />
+			<http:request method="POST" doc:name="Request start" doc:id="822871c7-77f1-4771-bf42-3591635dc74d" config-ref="HTTP_Request_Configuration_munit" path="/start" target="recording" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#["2020-11-29"]' doc:name="Set Variable datestring" doc:id="b303598a-9185-4400-a82d-bc8f06f5f8c3" variableName="datestring"/>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/playlist">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"datestring": vars.datestring}]]]></http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <logger level="INFO" doc:name="Logger" doc:id="64e2427a-c238-4fbc-90d0-bf7d250114a6" message="#[payload]"/>
+			<munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="09ff3ad9-1767-4f46-92f1-8047e56ec79f" message="The response payload is not correct!" actual='#[output application/java
+fun checkPiece1(play) = play.user_id == vars.user_id and play.piece."_id" == vars.piece1."_id" and play.done == true and play.recording."_id" == vars.recording."_id" and play.last_recording == null 
+fun checkPiece2(play) = play.user_id == vars.user_id and play.piece."_id" == vars.piece2."_id" and play.done == false and play.recording == null and play.last_recording == null 
+---
+sizeOf(payload) == 2 and
+(if(payload[0].piece."_id" == vars.piece1."_id") checkPiece1(payload[0]) else checkPiece2(payload[0])) and
+(if(payload[1].piece."_id" == vars.piece1."_id") checkPiece1(payload[1]) else checkPiece2(payload[1]))]' expected="#[true]"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\playlist:skd-piano-lesson-config-200-application\json-FlowTest-piece1" description="Verifying functionality of [get:\playlist:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\playlist:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="aec71f48-f3d6-432a-a4d2-ad064c12279f" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-1","composer":"A1","inlist":true}]' doc:name="Set Payload inlist=true piece 1" doc:id="685a2bbb-0159-4bbc-9928-80451fb9c87d" />
+			<http:request method="POST" doc:name="Request insert piece 1" doc:id="707f7775-45d4-4e8b-aa60-8ceb8a67f773" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece1">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-2","composer":"A2","inlist":true}]' doc:name="Set Payload inlist=true piece 2" doc:id="7bfbf9ea-65d3-4611-afe5-a588ae78a493" />
+			<http:request method="POST" doc:name="Request insert piece 2" doc:id="c551141f-aa36-4b2f-b7d3-765b1795e2ea" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece2">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-false","composer":"B","inlist":false}]' doc:name="Set Payload inlist=false piece" doc:id="143d1902-3926-4cdc-913e-0518f578bfd6" />
+			<http:request method="POST" doc:name="Request insert 3" doc:id="235c28ae-4153-48f0-acbf-c516a387e744" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece3">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<munit-tools:mock-when doc:name="Mock when Initiate multipart upload" doc:id="d495fc42-b79e-4c23-9d83-14fda77e04cd" processor="s3:initiate-multipart-upload" >
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['UPLOADID']" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="uploadId" value="#['UPLOADID']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<set-payload value='#[output application/json --- {"user_id": vars.user_id, "piece_id": vars.piece1."_id", "datestring": "2020-11-29"}]' doc:name="Set Payload for start" doc:id="f2039a94-bd84-425a-9ad9-0783c8f3d384" />
+			<http:request method="POST" doc:name="Request start" doc:id="cf49ca13-298f-4e52-b5b8-40dfa8ad6132" config-ref="HTTP_Request_Configuration_munit" path="/start" target="recording" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#["2020-11-29"]' doc:name="Set Variable datestring" doc:id="ccd43197-9099-47fc-8c28-9bc552254ee7" variableName="datestring"/>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/playlist">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"datestring": vars.datestring, "piece_id": vars.piece1."_id"}]]]></http:query-params>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <logger level="INFO" doc:name="Logger" doc:id="257bec46-38f5-409e-8488-2e19c0d62958" message="#[payload]"/>
+			<munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="40f32d43-059d-41fb-814f-b9cd3b07162e" message="The response payload is not correct!" actual='#[output application/java
+fun checkPiece1(play) = play.user_id == vars.user_id and play.piece."_id" == vars.piece1."_id" and play.done == true and play.recording."_id" == vars.recording."_id" and play.last_recording == null 
+fun checkPiece2(play) = play.user_id == vars.user_id and play.piece."_id" == vars.piece2."_id" and play.done == false and play.recording == null and play.last_recording == null 
+---
+sizeOf(payload) == 1 and
+checkPiece1(payload[0])]' expected="#[true]"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\playlist:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\playlist:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\playlist:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/playlist">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"datestring": vars.datestring}]]]></http:query-params>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\recording\(id):skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [get:\recording\(id):skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\recording\(id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+			<flow-ref doc:name="Flow Reference session setup" doc:id="44cff889-e1f3-429d-a0b9-796564662c55" name="skd-piano-lesson-apikit-test-session-setup" />
+			<munit-tools:mock-when doc:name="Mock when Initiate multipart upload" doc:id="d2df7e6a-98b8-4134-a27d-b993d98b847d" processor="s3:initiate-multipart-upload">
+				<munit-tools:then-return>
+					<munit-tools:variables>
+						<munit-tools:variable key="uploadId" value="#['UPLOADID']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-1","composer":"A1","inlist":true}]' doc:name="Set Payload inlist=true piece 1" doc:id="ea9b1c87-83f5-494c-9cfe-b32b568daa03" />
+			<http:request method="POST" doc:name="Request insert piece 1" doc:id="e7a3d480-fad4-4bd7-bf19-bd673f0f6722" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece1" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#[output application/json --- {"user_id": vars.user_id, "piece_id": vars.piece1."_id", "datestring": "2020-11-29"}]' doc:name="Set Variable" doc:id="659a069b-362e-4c24-b52d-631142cc1e85" variableName="requestInput" />
+			<set-payload value="#[vars.requestInput]" doc:name="Set Payload" doc:id="9c5841b8-bb61-4a84-9da6-65f32261387e" />
+			<http:request method="POST" doc:name="Request start" doc:id="02c210d3-148f-4e0c-a952-9564184d69e7" config-ref="HTTP_Request_Configuration_munit" path="/start" target="recording">
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<logger level="INFO" doc:name="Logger" doc:id="3cc1e8e2-2a29-49da-b04d-51574ea680fc" message="#[vars.recording]"/>
+			<set-variable variableName="id" value='#[vars.recording."_id"]' doc:name="id" />
+			<munit-tools:mock-when doc:name="Mock when signed signature requested" doc:id="2dbea991-b77d-4dd1-850a-a704259d92e1" processor="s3:create-object-presigned-uri">
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="signedUrl" value="#['SIGNED_URL']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/recording/$(vars.id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <logger level="INFO" doc:name="Logger" doc:id="1ff2298f-bdb3-41af-8163-6d27158dcc09" message="#[payload]"/>
+			<munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="8629d83e-4afe-41e7-9e74-e139bb83f205" actual='#[output application/java
+---
+payload.recording."_id" == vars.recording."_id" and
+payload.recording.user_id == vars.recording.user_id and
+payload.recording.piece_id == vars.recording.piece_id and
+payload.recording.date == vars.recording.date and
+payload.recording.datetime == vars.recording.datetime and
+payload.recording.bucket == vars.recording.bucket and
+payload.recording.key == vars.recording.key and
+payload.signedUrl == "SIGNED_URL"]' expected="#[true]" message="The response payload is not correct!"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\recording\(id):skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\recording\(id):skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\recording\(id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="id" value="#['null']" doc:name="id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/recording/$(vars.id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\me:skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [get:\me:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\me:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="db79ff80-3d02-48ba-99b4-10b6b9550b26" name="skd-piano-lesson-apikit-test-session-setup" />
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/me">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression='#[output 
+application/java 
+---
+payload.name == "Admin" and payload.username == "admin" and payload."_id" == vars.user_id]' is="#[MunitTools::equalTo(true)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\me:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\me:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\me:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/me">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\pieces:skd-piano-lesson-config-200-application\json-FlowTest-inlist-true" description="Verifying functionality of [get:\pieces:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\pieces:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="5ff31f2e-7c9e-46d6-82ef-5619df4f033e" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true","composer":"A","inlist":true}]' doc:name="Set Payload inlist=true piece" doc:id="1359c583-4d69-4a9d-86a2-be4e55bf229b" />
+			<http:request method="POST" doc:name="Request insert" doc:id="74371e6d-6390-4400-8506-10e5b34ef779" config-ref="HTTP_Request_Configuration_munit" path="/piece">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-false","composer":"B","inlist":false}]' doc:name="Set Payload inlist=false piece" doc:id="5f45a032-0dac-4d50-962d-dac637bbe913" />
+			<http:request method="POST" doc:name="Request insert" doc:id="8425bf63-d286-4d1c-ba32-be6bb9a78d57" config-ref="HTTP_Request_Configuration_munit" path="/piece" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/pieces" doc:name="Request inlist=true">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"inlist":true}]]]></http:query-params>
+            </http:request>
+			<logger level="INFO" doc:name="Logger" doc:id="fb438eb4-c088-4a06-a18b-360ed10d4319" message="#[payload]"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression='#[output 
+application/java 
+var inlistTrue = {"name":"INLIST-Equal-true","composer":"A","inlist":true}
+var inlistFalse ={"name":"INLIST-Equal-false","composer":"B","inlist":false}
+---
+sizeOf(payload) == 1 and payload[0].name == inlistTrue.name and payload[0].composer == inlistTrue.composer]' is="#[MunitTools::equalTo(true)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\pieces:skd-piano-lesson-config-200-application\json-FlowTest-inlist-false" description="Verifying functionality of [get:\pieces:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\pieces:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="4f8eec81-2c73-4ac5-9afc-f4fe02f5f392" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true","composer":"A","inlist":true}]' doc:name="Set Payload inlist=true piece" doc:id="404aeef6-ddda-4630-9d6a-e6f9125d29d6" />
+			<http:request method="POST" doc:name="Request insert" doc:id="9f5e6b4b-278a-4fcb-b8fb-3acd4810f36b" config-ref="HTTP_Request_Configuration_munit" path="/piece">
+				<http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-false","composer":"B","inlist":false}]' doc:name="Set Payload inlist=false piece" doc:id="10d49e2f-adda-40e9-bf74-35106249006d" />
+			<http:request method="POST" doc:name="Request insert" doc:id="15472c24-c2ab-415f-b1ed-ef2771a66159" config-ref="HTTP_Request_Configuration_munit" path="/piece" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/pieces" doc:name="Request inlist=false">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"inlist":false}]]]></http:query-params>
+            </http:request>
+			<logger level="INFO" doc:name="Copy_of_Logger" doc:id="41705388-7819-4cc0-a67f-9cc18609e68f" message="#[payload]" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+            <munit-tools:assert-that expression='#[output 
+application/java 
+var inlistTrue = {"name":"INLIST-Equal-true","composer":"A","inlist":true}
+var inlistFalse ={"name":"INLIST-Equal-false","composer":"B","inlist":false}
+---
+sizeOf(payload) == 1 and payload[0].name == inlistFalse.name and payload[0].composer == inlistFalse.composer]' is="#[MunitTools::equalTo(true)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\pieces:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\pieces:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\pieces:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/pieces">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:query-params><![CDATA[#[{"inlist":"true"}]]]></http:query-params>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\user:application\json:skd-piano-lesson-config-200-application\json-FlowTest-insert" description="Verifying functionality of [post:\user:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\user:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <flow-ref doc:name="Flow Reference session setup" doc:id="def04d33-8aca-4dc5-a22c-027b98c65dff" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_user_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/user">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="da7f021e-b2a5-4ffc-8c80-ef26a307c44e" actual="#[output application/java 
+var data = read(MunitTools::getResourceAsString('scaffolder/request/post_user_application_json.json'), 'application/json')
+---
+payload.&quot;_id&quot; != null and payload.name == data.name and payload.username == data.username]" expected="#[true]" message="The response payload is not correct!"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\user:application\json:skd-piano-lesson-config-200-application\json-FlowTest-update" description="Verifying functionality of [post:\user:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\user:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <flow-ref doc:name="Flow Reference session setup" doc:id="d1064137-ce80-4847-b5f1-afb9d04e47a7" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_user_application_json.json')]" />
+			<http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/user">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+			<set-variable value="#[payload]" doc:name="Set Variable user" doc:id="d468e061-3f48-4fa2-b2eb-4d2483c4b688" variableName="user"/>
+			<set-payload value="#[{&quot;_id&quot;: payload.&quot;_id&quot;} ++ 
+read(
+	MunitTools::getResourceAsString('scaffolder/request/post_user_application_json2.json', 'UTF-8'),
+	&quot;application/json&quot;
+)]" doc:name="Set Payload for update" doc:id="d253433c-9754-45b4-9624-4189f16dd097" />
+        </munit:behavior>
+        <munit:execution>
+			<http:request method="POST" doc:name="Request update" doc:id="16118178-289d-49a7-b838-67f6afca5b35" config-ref="HTTP_Request_Configuration_munit" path="/user" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+        </munit:execution>
+		<munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="dbfaa62c-e120-4d92-b873-79cad23ecc1d" actual="#[output application/java 
+var data = read(MunitTools::getResourceAsString('scaffolder/request/post_user_application_json2.json'), 'application/json')
+---
+payload.&quot;_id&quot; == vars.user.&quot;_id&quot; and payload.name == data.name and payload.username == data.username]" expected="#[true]" message="The response payload is not correct!" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\user:application\json:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [post:\user:application\json:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\user:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_user_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/user">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\stop:application\json:skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [post:\stop:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\stop:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+			<flow-ref doc:name="Flow Reference session setup" doc:id="fde1210f-fef0-4927-aa9f-4d14faa14465" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-1","composer":"A1","inlist":true}]' doc:name="Set Payload inlist=true piece 1" doc:id="d00fcbb2-fdca-42d9-8b06-3b976d1fa0d5" />
+			<http:request method="POST" doc:name="Request insert piece 1" doc:id="4a4e679d-c16b-4fa2-83e9-ae2f4993dffe" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece1" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#[output application/json --- {"user_id": vars.user_id, "piece_id": vars.piece1."_id", "datestring": "2020-11-29"}]' doc:name="Set Variable" doc:id="563fb943-29f1-4cc0-adb7-6693be52d629" variableName="requestInput" />
+			<set-payload value="#[vars.requestInput]" doc:name="Set Payload" doc:id="105cebe0-6f7a-4f82-ab49-5b71a0e496fe" />
+			<munit-tools:mock-when doc:name="Mock when Initiate multipart upload" doc:id="eb3a5b0d-955c-43ce-97d3-19567478c42d" processor="s3:initiate-multipart-upload" >
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['UPLOADID']" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="uploadId" value="#['UPLOADID']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<http:request method="POST" doc:name="Request start" doc:id="e1ecf4b6-62c1-4f76-be87-e577a1436abe" config-ref="HTTP_Request_Configuration_munit" path="/start" target="recording">
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<os:store doc:name="Store wskey" doc:id="1093286a-4b8c-4969-943b-80ee62b303fa" key='#[vars.recording."_id"]' objectStore="Object_store_wsmap">
+				<os:value ><![CDATA[#["WSKEY-" ++ (vars.recording."_id" default "")]]]></os:value>
+			</os:store>
+			<os:store doc:name="Store recording id" doc:id="f4962ea5-5809-436c-99f0-0b93a0d944f7" key='#["WSKEY-" ++ (vars.recording."_id" default "")]' objectStore="Object_store_wsmap">
+				<os:value><![CDATA[#[vars.recording."_id"]]]></os:value>
+			</os:store>
+			<os:store doc:name="Store cache" doc:id="77967285-d365-447b-9040-d6a925b8b301" key='#["WSKEY-" ++ (vars.recording."_id" default "")]' objectStore="Object_store_cache">
+				<os:value ><![CDATA[#["CACHE" as Binary]]]></os:value>
+			</os:store>
+			<set-payload value='#[{"recording_id": vars.recording."_id"}]' />
+			<munit-tools:mock-when doc:name="Mock when upload last part" doc:id="cb5c0e86-6b58-49f2-9623-4bced76e7366" processor="s3:upload-part">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Upload last part" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="uploadResult" value="#[output application/json --- {'etag': 'etag1', 'partNumber' : 1}]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when Complete multipart upload" doc:id="3c9dd852-1062-4980-885f-a0aa30a58f89" processor="s3:complete-multipart-upload">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Complete multipart upload" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/stop">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\stop:application\json:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [post:\stop:application\json:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\stop:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_stop_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/stop">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\start:application\json:skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [post:\start:application\json:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\start:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <flow-ref doc:name="Flow Reference session setup" doc:id="cc62af3a-b2f0-4d9c-955c-cb1d676130b1" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true-1","composer":"A1","inlist":true}]' doc:name="Set Payload inlist=true piece 1" doc:id="cba53607-fcde-4bb8-b7f1-f4e255d157f9" />
+			<http:request method="POST" doc:name="Request insert piece 1" doc:id="8f4f71a8-cfde-457e-853a-f0a33321ddd9" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece1">
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#[output application/json --- {"user_id": vars.user_id, "piece_id": vars.piece1."_id", "datestring": "2020-11-29"}]' doc:name="Set Variable" doc:id="18525842-bc56-4607-b86d-1440dc344491" variableName="requestInput"/>
+			<set-payload value='#[vars.requestInput]' />
+			<munit-tools:mock-when doc:name="Mock when Initiate multipart upload" doc:id="0c96e034-eaae-4a2f-992c-4d2837cd1631" processor="s3:initiate-multipart-upload">
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['UPLOADID']" encoding="UTF-8" />
+					<munit-tools:variables >
+						<munit-tools:variable key="uploadId" value="#['UPLOADID']" mediaType="text/plain" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/start">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="ac37f573-7333-4dbe-bd64-7392ee800692" message="The response payload is not correct!" actual='#[output application/java
+---
+payload."_id" != null and
+payload.user_id == vars.requestInput.user_id and
+payload.piece_id == vars.requestInput.piece_id and
+payload.date == vars.requestInput.datestring and
+payload.datetime != null and
+payload.bucket == p("aws.s3.bucket_name") and
+payload.key != null]' expected="#[true]"/>
+			<os:retrieve doc:name="Retrieve upload" doc:id="53c19c41-0487-4f6b-9b83-3ff5fbd05d34" key='#[payload."_id"]' objectStore="Object_store_Uploads" target="upload"/>
+			<logger level="INFO" doc:name="Logger" doc:id="3c25b3d8-fdf8-44cd-b661-92d9e4de17f9" message="#[vars.upload]"/>
+			<munit-tools:assert-equals doc:name="Assert equals - upload is Expected" doc:id="3d73a6d6-b106-4e9a-8fbe-d02675b6cc53" actual='#[output application/java
+---
+vars.upload.upload_id == "UPLOADID" and
+vars.upload.bucket == payload.bucket and
+vars.upload.key == payload.key and
+vars.upload.part_number == 0 and
+vars.upload.etags == [] and
+vars.upload.len == 0]' expected="#[true]" message="The upload is not correct!" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="post:\start:application\json:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [post:\start:application\json:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="post:\start:application\json:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-payload value="#[MunitTools::getResourceAsString('scaffolder/request/post_start_application_json.json')]" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="POST" path="/start">
+                <http:headers><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\user\(user_id):skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [get:\user\(user_id):skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\user\(user_id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <flow-ref doc:name="Flow Reference session setup" doc:id="eec8bf69-1301-4a21-bc2c-d94e9cf49df5" name="skd-piano-lesson-apikit-test-session-setup" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/user/$(vars.user_id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="107fd70e-6626-4afa-92d9-b7d2e877a038" actual='#[output application/java ---
+payload."_id" == vars.user_id and payload.name == "Admin" and payload.username == "admin"]' expected="#[true]" message="The response payload is not correct!"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\user\(user_id):skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\user\(user_id):skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\user\(user_id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="user_id" value="#['null']" doc:name="user_id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/user/$(vars.user_id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\composers:skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [get:\composers:skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\composers:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior >
+			<flow-ref doc:name="Flow Reference session setup" doc:id="6cb5a6f3-a401-47d1-987a-194040331804" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true","composer":"A","inlist":true}]' doc:name="Set Payload inlist=true piece" doc:id="46c819c7-e800-469c-99e5-62a1079c26fb" />
+			<http:request method="POST" doc:name="Request insert" doc:id="2dadc958-4f2d-42ef-8015-6c3ba9c1fe65" config-ref="HTTP_Request_Configuration_munit" path="/piece" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-false","composer":"B","inlist":false}]' doc:name="Set Payload inlist=false piece" doc:id="07975e8b-874a-4159-afe6-01d7dfbe95ea" />
+			<http:request method="POST" doc:name="Request insert" doc:id="521410b8-df58-46ef-a9e7-de9f8e0048aa" config-ref="HTTP_Request_Configuration_munit" path="/piece" >
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+		</munit:behavior>
+		<munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/composers">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="86918f57-2e4f-4548-858c-29219de0a88f" actual='#[(payload contains("A")) and (payload contains("B"))]' expected="#[true]" message="The response payload is not correct!"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\composers:skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\composers:skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\composers:skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="/composers">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
+</mule>
