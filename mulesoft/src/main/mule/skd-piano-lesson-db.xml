@@ -134,7 +134,7 @@ var datestring = payload.datestring
 var yymmdd = currentDt as String {format: "yyyyMMddHHmmss"}
 var title = (vars.piece.name default "") ++ "(" ++ (vars.piece.composer default "") ++ ")" 
 var titleEncoded = title replace /[^\w\d\(\)\._\-À-ž\u0370-\u03FF\u0400-\u04FF]/ with("-") 
-var key = payload.user_id ++ "/" ++ datestring ++ "/" ++ titleEncoded ++ ".webm"
+var key = payload.user_id ++ "/" ++ datestring ++ "/" ++ titleEncoded ++ "-" ++ yymmdd ++ ".webm"
 ---
 {
 	"_id": if(payload.recording_id == null) uuid() else payload.recording_id,

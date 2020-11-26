@@ -347,4 +347,22 @@ payload ++ {"password": hashedPwd}]]></ee:set-payload>
         </ee:transform>
         <flow-ref doc:name="Flow Reference upsert user" doc:id="357082c8-5965-4745-8c0f-938748a7022b" name="skd-piano-lesson-db-upsert-user" />
     </flow>
+    <flow name="get:\piece\(piece_id):skd-piano-lesson-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="piece_id">attributes.uriParams.'piece_id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "_id": vars.piece_id
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<flow-ref doc:name="Flow Reference get piece" doc:id="80557504-7ce1-478a-8421-1dabbb6ca1d9" name="skd-piano-lesson-db-get-piece" />
+    </flow>
 </mule>

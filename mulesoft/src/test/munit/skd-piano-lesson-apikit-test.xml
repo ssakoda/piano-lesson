@@ -861,4 +861,63 @@ payload.message]" is="#[MunitTools::equalTo(
 )]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
         </munit:validation>
     </munit:test>
+    <munit:test name="get:\piece\(piece_id):skd-piano-lesson-config-200-application\json-FlowTest" description="Verifying functionality of [get:\piece\(piece_id):skd-piano-lesson-config-200-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\piece\(piece_id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <flow-ref doc:name="Flow Reference session setup" doc:id="d29716b3-32f2-4b12-bb63-43c43e875271" name="skd-piano-lesson-apikit-test-session-setup" />
+			<set-payload value='#[output application/json --- 
+{"name":"INLIST-Equal-true","composer":"A","inlist":true}]' doc:name="Set Payload inlist=true piece" doc:id="3220ba73-8fe5-4c06-9dce-619e524935ac" />
+			<http:request method="POST" doc:name="Request insert" doc:id="756bf2d7-67c0-46cb-984e-1d783c136e42" config-ref="HTTP_Request_Configuration_munit" path="/piece" target="piece">
+				<http:headers ><![CDATA[#[{"Accept":"application/json","Content-Type":"application/json", "cookie": vars.cookie}]]]></http:headers>
+			</http:request>
+			<set-variable value='#[vars.piece."_id"]' doc:name="Set Variable piece_id" doc:id="7d534d09-885a-47e7-9604-dca2b6d7baf3" variableName="piece_id"/>
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/piece/$(vars.piece_id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json", "cookie": vars.cookie}]]]></http:headers>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(200)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 200" />
+			<munit-tools:assert-equals doc:name="Assert equals - Payload is Expected" doc:id="38f6bb72-dee8-4369-9406-bc1f01a44298" actual='#[output application/java ---
+payload."_id" == vars.piece."_id" and 
+payload.name == vars.piece.name and 
+payload.composer == vars.piece.composer and 
+payload.inlist == vars.piece.inlist and 
+payload.user_id == vars.piece.user_id]' expected="#[true]" message="The response payload is not correct!"/>
+        </munit:validation>
+    </munit:test>
+    <munit:test name="get:\piece\(piece_id):skd-piano-lesson-config-401-application\json-FlowTest" description="Verifying functionality of [get:\piece\(piece_id):skd-piano-lesson-config-401-application\json]">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="skd-piano-lesson-main" />
+            <munit:enable-flow-source value="get:\piece\(piece_id):skd-piano-lesson-config" />
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <set-variable variableName="piece_id" value="#['null']" doc:name="piece_id" />
+        </munit:behavior>
+        <munit:execution>
+            <http:request config-ref="HTTP_Request_Configuration_munit" method="GET" path="#['/piece/$(vars.piece_id)']">
+                <http:headers><![CDATA[#[{"Accept":"application/json"}]]]></http:headers>
+                <http:response-validator>
+                    <http:success-status-code-validator values="401" />
+                </http:response-validator>
+            </http:request>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.statusCode]" is="#[MunitTools::equalTo(401)]" message="The HTTP Status code is not correct!" doc:name="Assert That Status Code is 401" />
+            <munit-tools:assert-that expression="#[output application/java 
+---
+payload.message]" is="#[MunitTools::equalTo(
+	(
+		read(
+			MunitTools::getResourceAsString('scaffolder/response/post_401_piece_application_json.json'), 
+			&quot;application/json&quot;
+			).message
+	)
+)]" message="The response payload is not correct!" doc:name="Assert That - Payload is Expected" />
+        </munit:validation>
+    </munit:test>
 </mule>

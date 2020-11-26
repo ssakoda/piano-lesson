@@ -2,7 +2,7 @@
 <mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets" xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
     <apikit:config name="skd-piano-lesson-config" api="skd-piano-lesson.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8f6ec223-59a1-4a5c-b7b3-3abc9112b244">
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="04214e4d-0a8a-4108-9719-99f3604f83d8">
         <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS">
 			<tls:context >
 				<tls:key-store type="jks" path="pianolesson.jks" alias="pianolesson" keyPassword="pianolesson" password="pianolesson" algorithm="PKIX" />
@@ -29,5 +29,5 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
             <websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_config" />
         </websocket:connection>
     </websocket:config>
-    <configuration-properties doc:name="Configuration properties" doc:id="8bdb74a6-8cc1-46be-a258-67d000301324" file="config.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="79a7378e-ccbd-4b39-a85e-fbaeadcbbebf" file="config.yaml" />
 </mule>

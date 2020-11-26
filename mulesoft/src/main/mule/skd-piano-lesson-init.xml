@@ -26,7 +26,7 @@ output application/java
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-				<flow-ref doc:name="Flow Reference upsert user" doc:id="53b18a97-12b6-4b83-beda-779c611b5b38" name="skd-piano-lesson-db-upsert-user" />
+				<flow-ref doc:name="Flow Reference upsert user" doc:id="53b18a97-12b6-4b83-beda-779c611b5b38" name="post:\user:application\json:skd-piano-lesson-config" />
 			</when>
 		</choice>
 	</flow>

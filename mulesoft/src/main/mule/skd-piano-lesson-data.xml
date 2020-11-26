@@ -50,7 +50,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 						<raise-error doc:name="Raise error" doc:id="23f357bc-fa4e-4627-b145-9b57c96cb076" type="WS:INVALID_INITIATION" description="Invalid Initiation Message" />
 					</when>
 					<otherwise>
-						<set-payload value='#[output application/json --- read(payload,"application/json")]' doc:name="Set Payload deserialize" doc:id="100c9386-7361-404c-9556-31017b9148ec" />
+						<ee:transform doc:name="Transform Message deserialize" doc:id="744f2814-3be7-4464-a519-5dd900e57cf3">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+read(payload,"application/json")]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
 						<set-variable value="#[payload.recording_id]" doc:name="Set Variable recording_id" doc:id="a99ee8df-bbd4-489a-a29b-9a81bce3958f" variableName="recording_id" />
 					</otherwise>
 				</choice>

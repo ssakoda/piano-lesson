@@ -103,7 +103,26 @@ types:
         body:
           application/json:
             type: AuthorizationError
-
+  /{piece_id}:
+    uriParameters:
+      piece_id:
+        displayName: Piece Id
+        type: string
+        description: the Id of the Piece you query
+    get:
+      displayName: Get a Piece
+      description: Reterns a Piece if Id matched. 
+      responses:
+        200:
+          body:
+            application/json:
+              type: Piece
+        401:
+          description: Unauthorized error
+          body:
+            application/json:
+              type: AuthorizationError
+      
 
 /playlist:
   get:

@@ -3,6 +3,7 @@ import api from "../util/apiclient";
 import { Link } from "react-router-dom";
 
 const MAX_SIZE = 50 * 1024 * 1024;
+const MEDIA_RECORDER_INTERVAL = 10 * 1000;
 
 class Recording extends React.Component {
     constructor(props){
@@ -72,9 +73,11 @@ class Recording extends React.Component {
       console.log("start recording...");
       const lesson = this.props.data.lesson;
       let param = {piece_id: lesson.piece._id, datestring: this.state.datestring};
+      /*
       if(this.props.data && this.props.data.lesson && this.props.data.lesson.done == true && this.props.data.lesson.recording){
         param.recording_id = this.props.data.lesson.recording._id;
       }
+      */
       api.post(
         "/api/start", 
         param,
@@ -92,7 +95,7 @@ class Recording extends React.Component {
           socket.onmessage = (e) => {console.log("client message"); console.log(e);}
           socket.onerror = (e) => {console.log("client error"); console.log(e);}
           socket.onclose = () => {console.log("client closed");}
-          this.mediaRecorder.start(2*1000);
+          this.mediaRecorder.start(MEDIA_RECORDER_INTERVAL);
       }).catch(err => {
         console.error(err);
       });

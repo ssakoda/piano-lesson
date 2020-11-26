@@ -448,4 +448,24 @@ type: string]]></types:shape>
       </types:output-event>
     </types:processor-declaration>
   </types:enrichment>
+  <types:enrichment select="#744f2814-3be7-4464-a519-5dd900e57cf3">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Id"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b285a6a7-e5d2-4d67-b1cc-7ae48209695c"/>
+  <types:enrichment select="#925feb2c-c857-403a-a36d-00141c340798">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:variables>
+          <types:variable name="recording" type="Id"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b17711fb-32e6-485d-9aa1-67f94d9bbe31"/>
 </types:mule>
