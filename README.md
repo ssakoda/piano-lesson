@@ -66,7 +66,7 @@ Policy example in JSON format:
 
 "mulesoft" folder is the Anypoint Studio project to deploy. Deploy the project with the following system properties:
 
-- hostname=\<hostname(e.g. mule-worker-mule-worker-skd-piano-lesson.us-e2.cloudhub.io)\>
+- hostname=\<hostname(e.g. mule-worker-skd-piano-lesson.us-e2.cloudhub.io)\>
   - if you use an environemnt without Dedicated Load Balancer (like 30days free trial environment), you need to use hostname with "mule-worker-" as prefix to directly access to your worker
 - websocket.protocol=wss
 - websocket.port=8082
