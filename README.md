@@ -98,7 +98,7 @@ And this implementation doesn't work on iOS safari (at least). Please use PC/Mac
 
 ### Login
 
-Access to "https://mule-worker-\<hostname\>:8082/login". If you executed  "skd-piano-lesson-initFlow_Scheduler" scheduler from Runtime Manager, "Admin" user is already created. Use "admin" as username, "admin" as password to login.
+Access to "https://mule-worker-<hostname\>:8082/login". If you executed  "skd-piano-lesson-initFlow_Scheduler" scheduler from Runtime Manager, "Admin" user is already created. Use "admin" as username, "admin" as password to login.
 
 ![Login](image/login.png)
 
