@@ -55,7 +55,7 @@ Policy example in JSON format:
             ],
             "Resource": [
                 "arn:aws:s3:::skd-piano-lesson",
-                "arn:aws:s3:::*/*"
+                "arn:aws:s3:::skd-piano-lesson/*"
             ]
         }
     ]
