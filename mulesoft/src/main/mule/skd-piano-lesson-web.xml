@@ -29,17 +29,24 @@ if(params.plsessionId == null) null else params.plsessionId]]></ee:set-variable>
 				<raise-error doc:name="Raise error" doc:id="682a35a7-7d84-4329-8378-5b8d08cb380b" type="LOGIN:SESSION_EXPIRED" description="session is expired"/>
 			</when>
 		</choice>
-		<ee:transform doc:name="Transform Message" doc:id="e498e687-9e31-4a2b-9736-e5c15d92b568" >
-			<ee:message >
+		<try doc:name="Try" doc:id="03d3b061-e1c3-4c67-92c8-abd29eb46272" >
+			<ee:transform doc:name="Transform Message" doc:id="e498e687-9e31-4a2b-9736-e5c15d92b568">
+			<ee:message>
 			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="user_id" ><![CDATA[%dw 2.0
+			<ee:variables>
+				<ee:set-variable variableName="user_id"><![CDATA[%dw 2.0
 import java!com::skd::pianolesson::CryptoUtils
 output application/java
 ---
 CryptoUtils::validateJWT(vars.sessionId)]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="19365463-9c61-439b-80a6-b9c1eeb413ea" type="EXPRESSION">
+					<raise-error doc:name="Raise error" doc:id="28f6519e-128e-46e2-a0d5-1741569406b0" type="LOGIN:SESSION_EXPIRED" description="session is invalid" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
 	</flow>
 	<flow name="skd-piano-lesson-web-static-resource-flow" doc:id="fcfa6996-a42c-437d-a25f-67247be6f242" >
 		<http:listener doc:name="Listener /{filename}" doc:id="642b1b12-1ea0-4281-99fa-0dc3264ca48e" config-ref="HTTP_Listener_config" path="/{filename}">
